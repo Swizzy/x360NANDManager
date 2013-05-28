@@ -36,6 +36,7 @@
         internal static bool Initialized { get; private set; }
 
         public static uint Status { get; private set; }
+        public static uint ArmVersion;
 
         private static void UsbDeviceOnUsbErrorEvent(object sender, UsbError usbError) {
             Main.SendError(string.Format("A USB Error Occured: {0}", usbError));
@@ -55,17 +56,15 @@
                 Release();
             try {
                 _device = UsbDevice.OpenUsbDevice(DeviceFinder);
-                if(_device == null) {
-                    Main.SendError("No ARM device found!");
+                if (_device == null)
                     return false;
-                }
                 var wholeUsbDevice = _device as IUsbDevice;
                 if(!ReferenceEquals(wholeUsbDevice, null)) {
                     wholeUsbDevice.SetConfiguration(1);
                     wholeUsbDevice.ClaimInterface(0);
                 }
-                _reader = _device.OpenEndpointReader(ReadEndpointID.Ep02);
-                _writer = _device.OpenEndpointWriter(WriteEndpointID.Ep05);
+                _reader = _device.OpenEndpointReader((ReadEndpointID)0x82);
+                _writer = _device.OpenEndpointWriter((WriteEndpointID)0x05);
                 UsbDevice.UsbErrorEvent += UsbDeviceOnUsbErrorEvent;
                 Initialized = true;
                 return true;
@@ -125,7 +124,8 @@
             if(!Initialized)
                 return 0;
             SendCMD(CMDDevVersion, 0, 4);
-            return ReadUInt32();
+            ArmVersion = ReadUInt32();
+            return ArmVersion;
         }
 
         public static void EnterUpdateMode() {
@@ -172,6 +172,7 @@
         }
 
         public static uint FlashInit() {
+            GetARMVersion();
             return GetARMStatus(CMDDataInit);
         }
 
@@ -187,9 +188,9 @@
             if(!Initialized)
                 return;
             SendCMD(CMDDataErase, block);
-            if(GetARMVersion() >= 3)
-                SendCMD(CMDDataExec, block);
             GetFlashStatus();
+            if (ArmVersion >= 3)
+                SendCMD(CMDDataExec, block);
         }
 
         public static byte[] FlashRead(uint block) {
@@ -204,14 +205,16 @@
         }
 
         public static bool FlashWrite(uint block, byte[] buf) {
-            if(buf.Length < 0x4200 || !Initialized)
+            if(buf.Length != 0x4200 || !Initialized)
                 return false;
-            SendCMD(CMDDataWrite, block, 0x4200);
+            SendCMD(CMDDataWrite, block, (uint)buf.Length);
             int wrote;
             var err = _writer.Write(buf, 1000, out wrote);
-            if(GetARMVersion() >= 3)
-                SendCMD(CMDDataExec, block);
+            if (wrote != buf.Length)
+                Main.SendError("Code Error Inside...");
             GetFlashStatus();
+            if (ArmVersion >= 3)
+                SendCMD(CMDDataExec, block);
             return err == ErrorCode.None;
         }
 

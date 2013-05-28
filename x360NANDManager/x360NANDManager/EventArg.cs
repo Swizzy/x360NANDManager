@@ -12,4 +12,10 @@
             get { return _data; }
         }
     }
+
+    public sealed class ProgressData {
+        public double Percentage;
+        public long Current;
+        public long Maximum;
+    }
 }

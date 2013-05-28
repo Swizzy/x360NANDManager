@@ -1,5 +1,6 @@
 ﻿namespace x360NANDManager {
     using System;
+    using System.Collections.Generic;
 
     internal static class Utils {
         public static string GetSizeReadable(long i) {
@@ -25,5 +26,27 @@
                 Array.Reverse(array);
             return array;
         }
+
+        public static void RemoveDuplicatesInList<T>(ref List<T> list) {
+            var newlist = new List<T>();
+            foreach (var tmp in list) {
+                if (!newlist.Contains(tmp))
+                    newlist.Add(tmp);
+            }
+            list = newlist;
+        }
+
+        public static bool CompareByteArrays(byte[] a1, byte[] a2)
+        {
+            if (a1 == a2)
+                return true;
+            if (a1 == null || a2 == null || a1.Length != a2.Length)
+                return false;
+            for (var i = 0; i < a1.Length; i++)
+                if (a1[i] != a2[i])
+                    return false;
+            return true;
+        }
+
     }
 }

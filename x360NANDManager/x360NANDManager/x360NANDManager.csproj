@@ -49,12 +49,20 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BlockUtils.cs" />
     <Compile Include="EventArg.cs" />
-    <Compile Include="FTDI.cs" />
-    <Compile Include="NANDPro.cs" />
+    <Compile Include="MMC\MMC.cs" />
+    <Compile Include="MMC\MMCError.cs" />
+    <Compile Include="MMC\Native.cs" />
+    <Compile Include="SPI\MTX.cs" />
+    <Compile Include="SPI\FTDI.cs" />
+    <Compile Include="SPI\ARMBase.cs" />
+    <Compile Include="SPI\PICFlash.cs" />
+    <Compile Include="SPI\JRProgrammer.cs" />
+    <Compile Include="SPI\NANDPro.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -82,6 +90,11 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.None" />
+    </VisualStudio>
+  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

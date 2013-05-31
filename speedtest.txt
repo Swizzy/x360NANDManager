@@ -1,0 +1,7 @@
+Erase, Reset, Write, Reset, Verify stats:
+
+NAND-X ARM v1: 	05:18
+JRP v1:		08:55
+JRP v2:		10:55
+MTX SPI 1.0:	15:57
+

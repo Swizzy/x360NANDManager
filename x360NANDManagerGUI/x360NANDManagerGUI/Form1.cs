@@ -11,7 +11,7 @@
         private readonly Debug _dbg = new Debug();
         private bool _abort;
         private Stopwatch _sw = new Stopwatch();
-        private ISPIFlasher xNANDManagerSPI;
+        private ISPIFlasher _xNANDManagerSPI;
 
         public Form1() {
             InitializeComponent();
@@ -86,25 +86,26 @@
             try {
                 if(args.Device == BWArgs.Devices.MMC)
                     throw new NotImplementedException();
-                xNANDManagerSPI = Main.GetSPIFlasher();
-                if(xNANDManagerSPI == null) {
+                _xNANDManagerSPI = Main.GetSPIFlasher();
+                if(_xNANDManagerSPI == null) {
                     e.Result = false;
                     return;
                 }
-                xNANDManagerSPI.Error += MainOnError;
-                xNANDManagerSPI.Status += MainOnError;
-                xNANDManagerSPI.Progress += MainOnProgress;
-                XConfig cfg;
-                xNANDManagerSPI.Init(out cfg);
+                _xNANDManagerSPI.Error += MainOnError;
+                _xNANDManagerSPI.Status += MainOnError;
+                _xNANDManagerSPI.Progress += MainOnProgress;
                 switch(args.Operation) {
                     case BWArgs.Operations.Read:
-                        xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        e.Result = true;
+                        _xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
                         break;
                     case BWArgs.Operations.Erase:
-                        xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value);
+                        e.Result = true;
+                        _xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value);
                         break;
                     case BWArgs.Operations.Write:
-                        xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        e.Result = true;
+                        _xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
                         break;
                     default:
                         throw new Exception("Unkown Operation");
@@ -112,12 +113,14 @@
             }
             finally {
                 if(args.Device == BWArgs.Devices.SPI) {
-                    xNANDManagerSPI.Error -= MainOnError;
-                    xNANDManagerSPI.Status -= MainOnError;
-                    xNANDManagerSPI.Progress -= MainOnProgress;
-                    xNANDManagerSPI.DeInit();
-                    xNANDManagerSPI.Release();
-                    xNANDManagerSPI = null;
+                    if(_xNANDManagerSPI != null) {
+                        _xNANDManagerSPI.Error -= MainOnError;
+                        _xNANDManagerSPI.Status -= MainOnError;
+                        _xNANDManagerSPI.Progress -= MainOnProgress;
+                        _xNANDManagerSPI.DeInit();
+                        _xNANDManagerSPI.Release();
+                    }
+                    _xNANDManagerSPI = null;
                 }
             }
         }
@@ -199,7 +202,7 @@
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
-            xNANDManagerSPI.Abort();
+            _xNANDManagerSPI.Abort();
             _abort = true;
         }
 

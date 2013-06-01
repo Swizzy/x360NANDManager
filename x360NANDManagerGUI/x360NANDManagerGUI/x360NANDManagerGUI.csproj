@@ -35,8 +35,9 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="x360NANDManager">
-      <HintPath>..\..\x360NANDManager\x360NANDManager\bin\ALPHA\x360NANDManager.dll</HintPath>
+    <Reference Include="x360NANDManager, Version=1.0.47.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\x360NANDManager\x360NANDManager\bin\Debug\x360NANDManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

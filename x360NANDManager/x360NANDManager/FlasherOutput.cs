@@ -1,6 +1,5 @@
 ﻿namespace x360NANDManager {
     using System;
-    using System.Diagnostics;
 
     public abstract class FlasherOutput : Utils, IFlasherOutput {
         #region Implementation of IFlasherOutput
@@ -27,12 +26,14 @@
             Progress(null, new EventArg<ProgressData>(new ProgressData {Current = current, Maximum = max, Percentage = ((double)(current + 1) / total) * 100}));
         }
 
-        internal void UpdateStatus(string message) {
+        internal void UpdateStatus(string message)
+        {
             if(Status != null && message != null)
                 Status(null, new EventArg<string>(message));
         }
 
-        private void SendError(string message) {
+        internal void SendError(string message)
+        {
             if(Error != null && message != null)
                 Error(null, new EventArg<string>(message));
             Main.SendDebug(message);

@@ -25,9 +25,9 @@
 
         void WriteBlock(uint blockID, byte[] data, int verboseLevel = 0);
 
-        void Write(uint startBlock, uint blockCount, byte[] data, SPIWriteModes modes = SPIWriteModes.None, int verboseLevel = 0);
+        void Write(uint startBlock, uint blockCount, byte[] data, SPIWriteModes mode = SPIWriteModes.None, int verboseLevel = 0);
 
-        void Write(uint startBlock, uint blockCount, string file, SPIWriteModes modes = SPIWriteModes.None, int verboseLevel = 0);
+        void Write(uint startBlock, uint blockCount, string file, SPIWriteModes mode = SPIWriteModes.None, int verboseLevel = 0);
 
         #endregion Write
 
@@ -39,7 +39,7 @@
 
         void Read(uint startBlock, uint blockCount, string file, int verboseLevel = 0);
 
-        void Read(uint startBlock, uint blockCount, IEnumerable<string> files, int verboseLevel = 0);
+        void Read(uint startBlock, uint blockCount, List<string> files, int verboseLevel = 0);
 
         #endregion Read
     }

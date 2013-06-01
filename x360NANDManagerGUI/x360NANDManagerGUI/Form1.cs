@@ -5,20 +5,19 @@
     using System.IO;
     using System.Windows.Forms;
     using x360NANDManager;
+    using x360NANDManager.SPI;
 
     internal sealed partial class Form1 : Form {
         private readonly Debug _dbg = new Debug();
         private bool _abort;
         private Stopwatch _sw = new Stopwatch();
+        private ISPIFlasher xNANDManagerSPI;
 
         public Form1() {
             InitializeComponent();
         }
 
         private void Form1Load(object sender, EventArgs e) {
-            Main.Error += MainOnError;
-            Main.Status += MainOnError;
-            Main.Progress += MainOnProgress;
 #if DEBUG
             Main.Debug += MainOnDebug;
             _dbg.Show();
@@ -84,56 +83,42 @@
             if(!(e.Argument is BWArgs))
                 return;
             var args = e.Argument as BWArgs;
-
-            switch(args.Operation) {
-                case BWArgs.Operations.Read:
-                    switch(args.Device) {
-                        case BWArgs.Devices.ARM:
-                            e.Result = Main.ReadARM(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.JRPRogrammer:
-                            e.Result = Main.ReadJRP(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.PICFlash:
-                            e.Result = Main.ReadPIC(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.MTX:
-                            e.Result = Main.ReadMTX(args.File, (uint)spiblockbox.Value, (uint)spicountbox.Value, 1);
-                            break;
-                    }
-                    break;
-                case BWArgs.Operations.Erase:
-                    switch(args.Device) {
-                        case BWArgs.Devices.ARM:
-                            e.Result = Main.EraseARM((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.JRPRogrammer:
-                            e.Result = Main.EraseJRP((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.PICFlash:
-                            e.Result = Main.ErasePIC((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                            break;
-                        case BWArgs.Devices.MTX:
-                            e.Result = Main.EraseMTX((uint)spiblockbox.Value, (uint)spicountbox.Value, 1);
-                            break;
-                    }
-                    break;
-                case BWArgs.Operations.Write:
-                    switch(args.Device) {
-                        case BWArgs.Devices.ARM:
-                            e.Result = Main.WriteARM(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1, args.AddSpare, args.CorrectSpare, args.EraseFirst, args.Verify);
-                            break;
-                        case BWArgs.Devices.JRPRogrammer:
-                            e.Result = Main.WriteJRP(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1, args.AddSpare, args.CorrectSpare, args.EraseFirst, args.Verify);
-                            break;
-                        case BWArgs.Devices.PICFlash:
-                            e.Result = Main.WritePIC(args.File, (uint) spiblockbox.Value, (uint) spicountbox.Value, 1, args.AddSpare, args.CorrectSpare, args.EraseFirst, args.Verify);
-                            break;
-                        case BWArgs.Devices.MTX:
-                            e.Result = Main.WriteMTX(args.File, (uint)spiblockbox.Value, (uint)spicountbox.Value, 1, args.AddSpare, args.CorrectSpare, args.EraseFirst, args.Verify);
-                            break;
-                    }
-                    break;
+            try {
+                if(args.Device == BWArgs.Devices.MMC)
+                    throw new NotImplementedException();
+                xNANDManagerSPI = Main.GetSPIFlasher();
+                if(xNANDManagerSPI == null) {
+                    e.Result = false;
+                    return;
+                }
+                xNANDManagerSPI.Error += MainOnError;
+                xNANDManagerSPI.Status += MainOnError;
+                xNANDManagerSPI.Progress += MainOnProgress;
+                XConfig cfg;
+                xNANDManagerSPI.Init(out cfg);
+                switch(args.Operation) {
+                    case BWArgs.Operations.Read:
+                        xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        break;
+                    case BWArgs.Operations.Erase:
+                        xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value);
+                        break;
+                    case BWArgs.Operations.Write:
+                        xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        break;
+                    default:
+                        throw new Exception("Unkown Operation");
+                }
+            }
+            finally {
+                if(args.Device == BWArgs.Devices.SPI) {
+                    xNANDManagerSPI.Error -= MainOnError;
+                    xNANDManagerSPI.Status -= MainOnError;
+                    xNANDManagerSPI.Progress -= MainOnProgress;
+                    xNANDManagerSPI.DeInit();
+                    xNANDManagerSPI.Release();
+                    xNANDManagerSPI = null;
+                }
             }
         }
 
@@ -182,9 +167,11 @@
             SetAppState(false);
             var res = e.Result is bool && (bool) e.Result;
             if(res && !_abort)
-                MessageBox.Show("Operation completed successfully!");
+                MessageBox.Show("Operation completed successfully!", "Done!");
             else if(!_abort)
                 MessageBox.Show("Operation completed with errors!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else
+                MessageBox.Show("Operation aborted", "Aborted");
         }
 
         private void ClearLogClick(object sender, EventArgs e) {
@@ -212,7 +199,7 @@
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
-            Main.AbortOperation();
+            xNANDManagerSPI.Abort();
             _abort = true;
         }
 
@@ -253,11 +240,7 @@
 
             internal enum Devices {
                 None,
-                ARM,
-                JRPRogrammer,
-                PICFlash,
-                FTDI,
-                MTX,
+                SPI,
                 MMC
             }
 

@@ -2,7 +2,7 @@
     using System;
     using System.IO;
 
-    internal static class BlockUtils {
+    public abstract class BlockUtils : Utils {
         private static byte[] CalcECD(ref byte[] data, int offset) {
             uint val = 0;
             uint tmp = 0;
@@ -24,40 +24,40 @@
                          };
         }
 
-        public static void AddSpare(ref byte[] data, short metaType = 0x0) {
-            var dataOffset = 0x0;
-            var offset = 0x0;
-            var data2 = new byte[(data.Length / 0x200) * 0x210];
-            for(var page = 0x0; page < data.Length / 0x200; page++, offset += 0x210, dataOffset += 0x200) {
-                Buffer.BlockCopy(data, dataOffset, data2, offset, 0x200);
-                byte[] tmp;
-                switch(metaType) {
-                    case 0x1:
-                    case 0x0:
-                        tmp = BitConverter.GetBytes((ushort) (page / 0x20));
-                        tmp = Utils.Correctendian(tmp);
-                        if(metaType == 0x0)
-                            Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x200, tmp.Length);
-                        else
-                            Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x201, tmp.Length);
-                        data2[offset + 0x205] = 0xFF;
-                        break;
-                    case 0x2:
-                        tmp = BitConverter.GetBytes((ushort) (page / 0x100));
-                        tmp = Utils.Correctendian(tmp);
-                        Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x201, tmp.Length);
-                        data2[offset + 0x200] = 0xFF;
-                        break;
-                    default:
-                        return;
-                }
-                tmp = CalcECD(ref data2, offset);
-                Buffer.BlockCopy(tmp, 0, data2, offset + 0x20C, tmp.Length);
-            }
-            data = data2;
-        }
+        //public void AddSpare(ref byte[] data, short metaType = 0x0) {
+        //    var dataOffset = 0x0;
+        //    var offset = 0x0;
+        //    var data2 = new byte[(data.Length / 0x200) * 0x210];
+        //    for(var page = 0x0; page < data.Length / 0x200; page++, offset += 0x210, dataOffset += 0x200) {
+        //        Buffer.BlockCopy(data, dataOffset, data2, offset, 0x200);
+        //        byte[] tmp;
+        //        switch(metaType) {
+        //            case 0x1:
+        //            case 0x0:
+        //                tmp = BitConverter.GetBytes((ushort) (page / 0x20));
+        //                tmp = Correctendian(tmp);
+        //                if(metaType == 0x0)
+        //                    Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x200, tmp.Length);
+        //                else
+        //                    Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x201, tmp.Length);
+        //                data2[offset + 0x205] = 0xFF;
+        //                break;
+        //            case 0x2:
+        //                tmp = BitConverter.GetBytes((ushort) (page / 0x100));
+        //                tmp = Correctendian(tmp);
+        //                Buffer.BlockCopy(tmp, 0x0, data2, offset + 0x201, tmp.Length);
+        //                data2[offset + 0x200] = 0xFF;
+        //                break;
+        //            default:
+        //                return;
+        //        }
+        //        tmp = CalcECD(ref data2, offset);
+        //        Buffer.BlockCopy(tmp, 0, data2, offset + 0x20C, tmp.Length);
+        //    }
+        //    data = data2;
+        //}
 
-        public static byte[] AddSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
+        protected static byte[] AddSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
             var ret = new byte[0x4200];
             var dataoffset = 0;
             var page = block * 0x20;
@@ -68,7 +68,7 @@
                     case 0x0:
                     case 0x1:
                         tmp = BitConverter.GetBytes((ushort) (page / 0x20));
-                        tmp = Utils.Correctendian(tmp);
+                        tmp = Correctendian(tmp);
                         if(metaType == 0x0)
                             Buffer.BlockCopy(tmp, 0x0, ret, offset + 0x200, tmp.Length);
                         else
@@ -77,7 +77,7 @@
                         break;
                     case 0x2:
                         tmp = BitConverter.GetBytes((ushort) (page / 0x100));
-                        tmp = Utils.Correctendian(tmp);
+                        tmp = Correctendian(tmp);
                         Buffer.BlockCopy(tmp, 0x0, ret, offset + 0x201, tmp.Length);
                         ret[offset + 0x200] = 0xFF;
                         break;
@@ -90,12 +90,12 @@
             return ret;
         }
 
-        public static void CorrectSpare(ref byte[] data, short metaType = 0x0) {
-            for(uint block = 0; block <= (data.Length / 0x210) / 0x20; block++)
-                CorrectSpareBlock(ref data, block, metaType);
-        }
+        //public void CorrectSpare(ref byte[] data, short metaType = 0x0) {
+        //    for(uint block = 0; block <= (data.Length / 0x210) / 0x20; block++)
+        //        CorrectSpareBlock(ref data, block, metaType);
+        //}
 
-        public static void CorrectSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
+        protected static void CorrectSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
             var offset = 0;
             for (var page = block * 0x20; page < (block * 0x20) + 0x20; page++, offset += 0x210)
             {
@@ -105,7 +105,7 @@
                     case 1:
                     case 0:
                         tmp = BitConverter.GetBytes((ushort) (page / 32));
-                        tmp = Utils.Correctendian(tmp);
+                        tmp = Correctendian(tmp);
                         if (data.Length < offset + 0x200 + tmp.Length)
                             Main.SendDebug("Found it!");
                         if(metaType == 0) {
@@ -131,7 +131,7 @@
                         break;
                     case 2:
                         tmp = BitConverter.GetBytes((ushort) (page / 256));
-                        tmp = Utils.Correctendian(tmp);
+                        tmp = Correctendian(tmp);
                         for(var i = 0; i < tmp.Length; i++) {
                             if(data[i + offset + 0x201] != tmp[i])
                                 skip = false;
@@ -148,15 +148,6 @@
                 tmp = CalcECD(ref data, offset);
                 Buffer.BlockCopy(tmp, 0, data, offset + 0x20C, tmp.Length);
             }
-        }
-
-        public static uint GetFileBlockCount(string file) {
-            var fi = new FileInfo(file);
-            if (fi.Length % 0x4200 == 0)
-                return (uint) (fi.Length / 0x4200);
-            if (fi.Length % 0x4000 == 0)
-                return (uint)(fi.Length / 0x4000);
-            return 0;
         }
     }
 }

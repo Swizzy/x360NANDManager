@@ -5,8 +5,6 @@
     using Microsoft.Win32.SafeHandles;
 
     internal class Native {
-        internal MMCError LastError { get; private set; }
-
         #region Enums
 
         #region Nested type: DIGCF
@@ -128,34 +126,30 @@
 
         #region Functions
 
-        internal bool GetFileHandle(string path, out SafeFileHandle handle, FileAccess fileAccess = FileAccess.ReadWrite, FileShare fileShare = FileShare.Read, FileMode fileMode = FileMode.OpenOrCreate) {
+        internal void GetFileHandle(string path, out SafeFileHandle handle, FileAccess fileAccess = FileAccess.ReadWrite, FileShare fileShare = FileShare.Read, FileMode fileMode = FileMode.OpenOrCreate) {
             if(path.Length > 1)
                 path = path.Substring(0, 1);
-            return GetFileHandleRaw(string.Format("\\\\.\\{0}:", path.ToUpper()), out handle, fileAccess, fileShare, fileMode);
+            GetFileHandleRaw(string.Format("\\\\.\\{0}:", path.ToUpper()), out handle, fileAccess, fileShare, fileMode);
         }
 
-        internal bool GetFileHandleRaw(string path, out SafeFileHandle handle, FileAccess fileAccess = FileAccess.ReadWrite, FileShare fileShare = FileShare.Read, FileMode fileMode = FileMode.OpenOrCreate) {
+        internal void GetFileHandleRaw(string path, out SafeFileHandle handle, FileAccess fileAccess = FileAccess.ReadWrite, FileShare fileShare = FileShare.Read, FileMode fileMode = FileMode.OpenOrCreate) {
             handle = CreateFile(path.TrimEnd('\\').ToUpper(), fileAccess, fileShare, IntPtr.Zero, fileMode, 0, IntPtr.Zero);
-            if(handle.IsInvalid) {
-                LastError = new MMCError(MMCError.ErrorLevels.Win32Error);
-                return false;
-            }
-            return true;
+            if(handle.IsInvalid)
+                throw new DeviceError(DeviceError.ErrorLevels.Win32Error);
         }
 
         internal int GetDeviceNumber(string devicePath) {
             SafeFileHandle h = null;
             var ptrSdn = IntPtr.Zero;
             try {
-                if(GetFileHandle(devicePath, out h)) {
-                    var requiredSize = 0;
-                    var sdn = new StorageDeviceNumber();
-                    var nBytes = Marshal.SizeOf(sdn);
-                    ptrSdn = Marshal.AllocHGlobal(nBytes);
-                    if(DeviceIoControl(h, (int) IOCTL.StorageGetDeviceNumber, IntPtr.Zero, 0, ptrSdn, nBytes, ref requiredSize, IntPtr.Zero)) {
-                        sdn = (StorageDeviceNumber) Marshal.PtrToStructure(ptrSdn, typeof(StorageDeviceNumber));
-                        return (sdn.deviceType << 8) + sdn.deviceNumber;
-                    }
+                GetFileHandle(devicePath, out h);
+                var requiredSize = 0;
+                var sdn = new StorageDeviceNumber();
+                var nBytes = Marshal.SizeOf(sdn);
+                ptrSdn = Marshal.AllocHGlobal(nBytes);
+                if(DeviceIoControl(h, (int) IOCTL.StorageGetDeviceNumber, IntPtr.Zero, 0, ptrSdn, nBytes, ref requiredSize, IntPtr.Zero)) {
+                    sdn = (StorageDeviceNumber) Marshal.PtrToStructure(ptrSdn, typeof(StorageDeviceNumber));
+                    return (sdn.deviceType << 8) + sdn.deviceNumber;
                 }
                 return -1;
             }
@@ -173,8 +167,7 @@
                 if(num != deviceNumber)
                     continue;
                 SafeFileHandle handle;
-                if(!GetFileHandle(drive.Name, out handle))
-                    return false;
+                GetFileHandle(drive.Name, out handle);
                 var outsize = 0;
                 if(!DeviceIoControl(handle, (int) IOCTL.LockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, ref outsize, IntPtr.Zero)) {
                     if(Marshal.GetLastWin32Error() == 0) {
@@ -198,8 +191,7 @@
                 if(num != deviceNumber)
                     continue;
                 SafeFileHandle handle;
-                if(!GetFileHandle(drive.Name, out handle))
-                    return false;
+                GetFileHandle(drive.Name, out handle);
                 var outsize = 0;
                 if(!DeviceIoControl(handle, (int) IOCTL.UnlockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, ref outsize, IntPtr.Zero))
                     return false;
@@ -240,9 +232,8 @@
                     i++;
                 }
             }
-            LastError = new MMCError(MMCError.ErrorLevels.Win32Error);
             SetupDiDestroyDeviceInfoList(h);
-            return "";
+            throw new DeviceError(DeviceError.ErrorLevels.Win32Error);
         }
 
         #region Disk Geometry

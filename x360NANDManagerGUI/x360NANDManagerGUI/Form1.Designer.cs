@@ -49,11 +49,7 @@
             this.spicountbox = new System.Windows.Forms.NumericUpDown();
             this.devices = new System.Windows.Forms.GroupBox();
             this.mmc = new System.Windows.Forms.RadioButton();
-            this.ftdi = new System.Windows.Forms.RadioButton();
-            this.JRPRogrammer = new System.Windows.Forms.RadioButton();
-            this.MTX = new System.Windows.Forms.RadioButton();
-            this.PICFlash = new System.Windows.Forms.RadioButton();
-            this.arm = new System.Windows.Forms.RadioButton();
+            this.spi = new System.Windows.Forms.RadioButton();
             this.label5 = new System.Windows.Forms.Label();
             this.rawbox = new System.Windows.Forms.RadioButton();
             this.verifyBox = new System.Windows.Forms.CheckBox();
@@ -82,7 +78,7 @@
             // 
             // readbtn
             // 
-            this.readbtn.Location = new System.Drawing.Point(12, 214);
+            this.readbtn.Location = new System.Drawing.Point(12, 191);
             this.readbtn.Name = "readbtn";
             this.readbtn.Size = new System.Drawing.Size(129, 23);
             this.readbtn.TabIndex = 1;
@@ -97,9 +93,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.outputbox);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox2.Location = new System.Drawing.Point(12, 301);
+            this.groupBox2.Location = new System.Drawing.Point(12, 278);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(423, 376);
+            this.groupBox2.Size = new System.Drawing.Size(423, 399);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "output";
@@ -115,7 +111,7 @@
             this.outputbox.Location = new System.Drawing.Point(3, 16);
             this.outputbox.Name = "outputbox";
             this.outputbox.ReadOnly = true;
-            this.outputbox.Size = new System.Drawing.Size(417, 357);
+            this.outputbox.Size = new System.Drawing.Size(417, 380);
             this.outputbox.TabIndex = 3;
             this.outputbox.Text = "";
             this.outputbox.WordWrap = false;
@@ -145,14 +141,14 @@
             // 
             // progress
             // 
-            this.progress.Location = new System.Drawing.Point(12, 272);
+            this.progress.Location = new System.Drawing.Point(12, 249);
             this.progress.Name = "progress";
             this.progress.Size = new System.Drawing.Size(423, 23);
             this.progress.TabIndex = 0;
             // 
             // erasebtn
             // 
-            this.erasebtn.Location = new System.Drawing.Point(282, 214);
+            this.erasebtn.Location = new System.Drawing.Point(282, 191);
             this.erasebtn.Name = "erasebtn";
             this.erasebtn.Size = new System.Drawing.Size(153, 23);
             this.erasebtn.TabIndex = 1;
@@ -182,7 +178,7 @@
             this.optionsbox.Controls.Add(this.addSpareBox);
             this.optionsbox.Location = new System.Drawing.Point(12, 12);
             this.optionsbox.Name = "optionsbox";
-            this.optionsbox.Size = new System.Drawing.Size(423, 196);
+            this.optionsbox.Size = new System.Drawing.Size(423, 173);
             this.optionsbox.TabIndex = 3;
             this.optionsbox.TabStop = false;
             this.optionsbox.Text = "Options";
@@ -190,7 +186,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 172);
+            this.label3.Location = new System.Drawing.Point(6, 149);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(62, 13);
             this.label3.TabIndex = 0;
@@ -199,7 +195,7 @@
             // spiblockbox
             // 
             this.spiblockbox.Hexadecimal = true;
-            this.spiblockbox.Location = new System.Drawing.Point(74, 170);
+            this.spiblockbox.Location = new System.Drawing.Point(74, 147);
             this.spiblockbox.Maximum = new decimal(new int[] {
             32767,
             0,
@@ -213,7 +209,7 @@
             // 
             this.mmccountbox.Enabled = false;
             this.mmccountbox.Hexadecimal = true;
-            this.mmccountbox.Location = new System.Drawing.Point(74, 144);
+            this.mmccountbox.Location = new System.Drawing.Point(74, 121);
             this.mmccountbox.Maximum = new decimal(new int[] {
             1,
             0,
@@ -226,7 +222,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(38, 146);
+            this.label6.Location = new System.Drawing.Point(38, 123);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(30, 13);
             this.label6.TabIndex = 0;
@@ -235,7 +231,7 @@
             // dumpcount
             // 
             this.dumpcount.Enabled = false;
-            this.dumpcount.Location = new System.Drawing.Point(81, 65);
+            this.dumpcount.Location = new System.Drawing.Point(87, 42);
             this.dumpcount.Maximum = new decimal(new int[] {
             10,
             0,
@@ -259,7 +255,7 @@
             // 
             this.mmcoffsetbox.Enabled = false;
             this.mmcoffsetbox.Hexadecimal = true;
-            this.mmcoffsetbox.Location = new System.Drawing.Point(74, 118);
+            this.mmcoffsetbox.Location = new System.Drawing.Point(74, 95);
             this.mmcoffsetbox.Maximum = new decimal(new int[] {
             1,
             0,
@@ -273,7 +269,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Enabled = false;
-            this.label2.Location = new System.Drawing.Point(6, 67);
+            this.label2.Location = new System.Drawing.Point(12, 44);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 13);
             this.label2.TabIndex = 9;
@@ -282,7 +278,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(30, 120);
+            this.label4.Location = new System.Drawing.Point(30, 97);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(38, 13);
             this.label4.TabIndex = 0;
@@ -291,7 +287,7 @@
             // spicountbox
             // 
             this.spicountbox.Hexadecimal = true;
-            this.spicountbox.Location = new System.Drawing.Point(221, 170);
+            this.spicountbox.Location = new System.Drawing.Point(221, 147);
             this.spicountbox.Maximum = new decimal(new int[] {
             32768,
             0,
@@ -304,14 +300,10 @@
             // devices
             // 
             this.devices.Controls.Add(this.mmc);
-            this.devices.Controls.Add(this.ftdi);
-            this.devices.Controls.Add(this.JRPRogrammer);
-            this.devices.Controls.Add(this.MTX);
-            this.devices.Controls.Add(this.PICFlash);
-            this.devices.Controls.Add(this.arm);
-            this.devices.Location = new System.Drawing.Point(288, 19);
+            this.devices.Controls.Add(this.spi);
+            this.devices.Location = new System.Drawing.Point(288, 95);
             this.devices.Name = "devices";
-            this.devices.Size = new System.Drawing.Size(129, 171);
+            this.devices.Size = new System.Drawing.Size(129, 72);
             this.devices.TabIndex = 6;
             this.devices.TabStop = false;
             this.devices.Text = "Device";
@@ -320,7 +312,7 @@
             // 
             this.mmc.AutoSize = true;
             this.mmc.Enabled = false;
-            this.mmc.Location = new System.Drawing.Point(6, 148);
+            this.mmc.Location = new System.Drawing.Point(6, 42);
             this.mmc.Name = "mmc";
             this.mmc.Size = new System.Drawing.Size(117, 17);
             this.mmc.TabIndex = 0;
@@ -328,68 +320,23 @@
             this.mmc.UseVisualStyleBackColor = true;
             this.mmc.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
             // 
-            // ftdi
+            // spi
             // 
-            this.ftdi.AutoSize = true;
-            this.ftdi.Enabled = false;
-            this.ftdi.Location = new System.Drawing.Point(6, 111);
-            this.ftdi.Name = "ftdi";
-            this.ftdi.Size = new System.Drawing.Size(85, 17);
-            this.ftdi.TabIndex = 0;
-            this.ftdi.Text = "FTDI (Squirt)";
-            this.ftdi.UseVisualStyleBackColor = true;
-            this.ftdi.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
-            // 
-            // JRPRogrammer
-            // 
-            this.JRPRogrammer.AutoSize = true;
-            this.JRPRogrammer.Location = new System.Drawing.Point(6, 88);
-            this.JRPRogrammer.Name = "JRPRogrammer";
-            this.JRPRogrammer.Size = new System.Drawing.Size(97, 17);
-            this.JRPRogrammer.TabIndex = 0;
-            this.JRPRogrammer.Text = "JR-Programmer";
-            this.JRPRogrammer.UseVisualStyleBackColor = true;
-            this.JRPRogrammer.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
-            // 
-            // MTX
-            // 
-            this.MTX.AutoSize = true;
-            this.MTX.Location = new System.Drawing.Point(6, 42);
-            this.MTX.Name = "MTX";
-            this.MTX.Size = new System.Drawing.Size(105, 17);
-            this.MTX.TabIndex = 0;
-            this.MTX.Text = "Matrix SPI (MTX)";
-            this.MTX.UseVisualStyleBackColor = true;
-            this.MTX.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
-            // 
-            // PICFlash
-            // 
-            this.PICFlash.AutoSize = true;
-            this.PICFlash.Location = new System.Drawing.Point(6, 65);
-            this.PICFlash.Name = "PICFlash";
-            this.PICFlash.Size = new System.Drawing.Size(93, 17);
-            this.PICFlash.TabIndex = 0;
-            this.PICFlash.Text = "PIC (PICFlash)";
-            this.PICFlash.UseVisualStyleBackColor = true;
-            this.PICFlash.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
-            // 
-            // arm
-            // 
-            this.arm.AutoSize = true;
-            this.arm.Checked = true;
-            this.arm.Location = new System.Drawing.Point(6, 19);
-            this.arm.Name = "arm";
-            this.arm.Size = new System.Drawing.Size(105, 17);
-            this.arm.TabIndex = 0;
-            this.arm.TabStop = true;
-            this.arm.Text = "ARM (NANDPro)";
-            this.arm.UseVisualStyleBackColor = true;
-            this.arm.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
+            this.spi.AutoSize = true;
+            this.spi.Checked = true;
+            this.spi.Location = new System.Drawing.Point(6, 19);
+            this.spi.Name = "spi";
+            this.spi.Size = new System.Drawing.Size(94, 17);
+            this.spi.TabIndex = 0;
+            this.spi.TabStop = true;
+            this.spi.Text = "SPI (All others)";
+            this.spi.UseVisualStyleBackColor = true;
+            this.spi.CheckedChanged += new System.EventHandler(this.DeviceCheckedChanged);
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(147, 172);
+            this.label5.Location = new System.Drawing.Point(147, 149);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(68, 13);
             this.label5.TabIndex = 0;
@@ -399,7 +346,7 @@
             // 
             this.rawbox.AutoSize = true;
             this.rawbox.Checked = true;
-            this.rawbox.Location = new System.Drawing.Point(183, 19);
+            this.rawbox.Location = new System.Drawing.Point(87, 19);
             this.rawbox.Name = "rawbox";
             this.rawbox.Size = new System.Drawing.Size(79, 17);
             this.rawbox.TabIndex = 5;
@@ -410,7 +357,7 @@
             // verifyBox
             // 
             this.verifyBox.AutoSize = true;
-            this.verifyBox.Location = new System.Drawing.Point(177, 42);
+            this.verifyBox.Location = new System.Drawing.Point(293, 43);
             this.verifyBox.Name = "verifyBox";
             this.verifyBox.Size = new System.Drawing.Size(105, 17);
             this.verifyBox.TabIndex = 2;
@@ -420,7 +367,7 @@
             // eraseBox
             // 
             this.eraseBox.AutoSize = true;
-            this.eraseBox.Location = new System.Drawing.Point(6, 42);
+            this.eraseBox.Location = new System.Drawing.Point(172, 43);
             this.eraseBox.Name = "eraseBox";
             this.eraseBox.Size = new System.Drawing.Size(115, 17);
             this.eraseBox.TabIndex = 2;
@@ -431,7 +378,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Enabled = false;
-            this.label1.Location = new System.Drawing.Point(6, 94);
+            this.label1.Location = new System.Drawing.Point(6, 71);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(35, 13);
             this.label1.TabIndex = 4;
@@ -442,15 +389,15 @@
             this.mmcdevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.mmcdevice.Enabled = false;
             this.mmcdevice.FormattingEnabled = true;
-            this.mmcdevice.Location = new System.Drawing.Point(47, 91);
+            this.mmcdevice.Location = new System.Drawing.Point(47, 68);
             this.mmcdevice.Name = "mmcdevice";
-            this.mmcdevice.Size = new System.Drawing.Size(235, 21);
+            this.mmcdevice.Size = new System.Drawing.Size(370, 21);
             this.mmcdevice.TabIndex = 3;
             // 
             // correctSpareBox
             // 
             this.correctSpareBox.AutoSize = true;
-            this.correctSpareBox.Location = new System.Drawing.Point(87, 19);
+            this.correctSpareBox.Location = new System.Drawing.Point(172, 20);
             this.correctSpareBox.Name = "correctSpareBox";
             this.correctSpareBox.Size = new System.Drawing.Size(90, 17);
             this.correctSpareBox.TabIndex = 1;
@@ -469,7 +416,7 @@
             // 
             // writebtn
             // 
-            this.writebtn.Location = new System.Drawing.Point(147, 214);
+            this.writebtn.Location = new System.Drawing.Point(147, 191);
             this.writebtn.Name = "writebtn";
             this.writebtn.Size = new System.Drawing.Size(129, 23);
             this.writebtn.TabIndex = 1;
@@ -485,7 +432,7 @@
             // abortbtn
             // 
             this.abortbtn.Enabled = false;
-            this.abortbtn.Location = new System.Drawing.Point(12, 243);
+            this.abortbtn.Location = new System.Drawing.Point(12, 220);
             this.abortbtn.Name = "abortbtn";
             this.abortbtn.Size = new System.Drawing.Size(423, 23);
             this.abortbtn.TabIndex = 1;
@@ -573,8 +520,7 @@
         private System.Windows.Forms.RadioButton rawbox;
         private System.Windows.Forms.GroupBox devices;
         private System.Windows.Forms.RadioButton mmc;
-        private System.Windows.Forms.RadioButton ftdi;
-        private System.Windows.Forms.RadioButton arm;
+        private System.Windows.Forms.RadioButton spi;
         private System.Windows.Forms.NumericUpDown dumpcount;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
@@ -588,13 +534,10 @@
         private System.Windows.Forms.ContextMenuStrip logmenu;
         private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
-        private System.Windows.Forms.RadioButton JRPRogrammer;
-        private System.Windows.Forms.RadioButton PICFlash;
         private System.Windows.Forms.Button abortbtn;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel dllversionlabel;
         private System.Windows.Forms.ToolStripStatusLabel hclink;
-        private System.Windows.Forms.RadioButton MTX;
     }
 }
 

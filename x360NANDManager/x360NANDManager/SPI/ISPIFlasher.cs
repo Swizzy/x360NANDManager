@@ -46,7 +46,6 @@
 
     [Flags] public enum SPIWriteModes {
         None = 0,
-        RAW = None,
         AddSpare = 1,
         CorrectSpare = 2,
         EraseFirst = 4,

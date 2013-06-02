@@ -7,21 +7,18 @@
     using x360NANDManager;
     using x360NANDManager.SPI;
 
-    internal sealed partial class Form1 : Form {
+    internal sealed partial class MainForm : Form {
         private readonly Debug _dbg = new Debug();
         private bool _abort;
         private Stopwatch _sw = new Stopwatch();
         private ISPIFlasher _xNANDManagerSPI;
 
-        public Form1() {
+        public MainForm() {
             InitializeComponent();
         }
 
         private void Form1Load(object sender, EventArgs e) {
-#if DEBUG
             Main.Debug += MainOnDebug;
-            _dbg.Show();
-#endif
             dllversionlabel.Text = Main.Version;
         }
 
@@ -77,9 +74,7 @@
         }
 
         private void BackgroundWorker1DoWork(object sender, DoWorkEventArgs e) {
-#if DEBUG
             _sw = Stopwatch.StartNew();
-#endif
             if(!(e.Argument is BWArgs))
                 return;
             var args = e.Argument as BWArgs;
@@ -97,15 +92,24 @@
                 switch(args.Operation) {
                     case BWArgs.Operations.Read:
                         e.Result = true;
-                        _xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        _xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, 1);
                         break;
                     case BWArgs.Operations.Erase:
                         e.Result = true;
-                        _xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value);
+                        _xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
                         break;
                     case BWArgs.Operations.Write:
                         e.Result = true;
-                        _xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File);
+                        var mode = SPIWriteModes.None;
+                        if (args.AddSpare)
+                            mode |= SPIWriteModes.AddSpare;
+                        else if (args.CorrectSpare)
+                            mode |= SPIWriteModes.CorrectSpare;
+                        if (args.EraseFirst)
+                            mode |= SPIWriteModes.EraseFirst;
+                        if (args.Verify)
+                            mode |= SPIWriteModes.VerifyAfter;
+                        _xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, mode, 1);
                         break;
                     default:
                         throw new Exception("Unkown Operation");
@@ -117,8 +121,6 @@
                         _xNANDManagerSPI.Error -= MainOnError;
                         _xNANDManagerSPI.Status -= MainOnError;
                         _xNANDManagerSPI.Progress -= MainOnProgress;
-                        _xNANDManagerSPI.DeInit();
-                        _xNANDManagerSPI.Release();
                     }
                     _xNANDManagerSPI = null;
                 }
@@ -163,10 +165,8 @@
         }
 
         private void BWRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
-#if DEBUG
             _sw.Stop();
             _dbg.AddDebug(string.Format("Completed after {0:F0} Minutes {1:F0} Seconds", _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-#endif
             SetAppState(false);
             var res = e.Result is bool && (bool) e.Result;
             if(res && !_abort)

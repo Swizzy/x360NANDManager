@@ -1,6 +1,6 @@
 ﻿namespace x360NANDManagerGUI
 {
-    internal sealed partial class Form1
+    internal sealed partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -231,7 +231,7 @@
             // dumpcount
             // 
             this.dumpcount.Enabled = false;
-            this.dumpcount.Location = new System.Drawing.Point(87, 42);
+            this.dumpcount.Location = new System.Drawing.Point(91, 42);
             this.dumpcount.Maximum = new decimal(new int[] {
             10,
             0,
@@ -269,7 +269,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Enabled = false;
-            this.label2.Location = new System.Drawing.Point(12, 44);
+            this.label2.Location = new System.Drawing.Point(16, 44);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 13);
             this.label2.TabIndex = 9;
@@ -346,7 +346,7 @@
             // 
             this.rawbox.AutoSize = true;
             this.rawbox.Checked = true;
-            this.rawbox.Location = new System.Drawing.Point(87, 19);
+            this.rawbox.Location = new System.Drawing.Point(6, 19);
             this.rawbox.Name = "rawbox";
             this.rawbox.Size = new System.Drawing.Size(79, 17);
             this.rawbox.TabIndex = 5;
@@ -407,7 +407,7 @@
             // addSpareBox
             // 
             this.addSpareBox.AutoSize = true;
-            this.addSpareBox.Location = new System.Drawing.Point(6, 19);
+            this.addSpareBox.Location = new System.Drawing.Point(91, 19);
             this.addSpareBox.Name = "addSpareBox";
             this.addSpareBox.Size = new System.Drawing.Size(75, 17);
             this.addSpareBox.TabIndex = 0;
@@ -481,7 +481,7 @@
             this.Controls.Add(this.abortbtn);
             this.Controls.Add(this.readbtn);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "x360NANDManager GUI";
             this.Load += new System.EventHandler(this.Form1Load);
             this.groupBox2.ResumeLayout(false);
             this.logmenu.ResumeLayout(false);

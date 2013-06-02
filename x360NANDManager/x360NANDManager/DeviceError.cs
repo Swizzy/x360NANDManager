@@ -1,6 +1,7 @@
 ﻿namespace x360NANDManager {
     using System;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
     using LibUsbDotNet.Main;
 
@@ -28,13 +29,14 @@
         }
 
         public override string ToString() {
+            var trace = new StackTrace(this);
             switch(ErrorLevel) {
                 case ErrorLevels.Win32Error:
-                    return string.Format("{0} Win32Error: {1} ({2})", ErrorLevel, Win32ErrorNumber, Win32ErrorString);
+                    return string.Format("{0} Win32Error: {1} ({2}){3}{4}", ErrorLevel, Win32ErrorNumber, Win32ErrorString, Environment.NewLine, trace);
                 case ErrorLevels.USBError:
-                    return string.Format("{0} USBError: {1} )", ErrorLevel, USBError);
+                    return string.Format("{0} USBError: {1}{2}{3}", ErrorLevel, USBError, Environment.NewLine, trace);
                 default:
-                    return string.Format("{0}", ErrorLevel);
+                    return string.Format("{0}{1}{2}", ErrorLevel, Environment.NewLine, trace);
             }
         }
 

@@ -5,7 +5,7 @@ namespace x360NANDManagerGUI
 {
     static class Program
     {
-        public static Form1 MainForm;
+        public static MainForm MainForm;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -14,7 +14,7 @@ namespace x360NANDManagerGUI
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            MainForm = new Form1();
+            MainForm = new MainForm();
             Application.Run(MainForm);
         }
     }

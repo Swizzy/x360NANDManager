@@ -1,15 +1,21 @@
 ﻿namespace x360NANDManagerGUI {
     using System;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.IO;
     using System.Windows.Forms;
 
     internal sealed partial class Debug : Form {
         internal Debug() {
             InitializeComponent();
+            ShowDebug();
         }
 
-        public void AddDebug(string msg) {
+        [Conditional("DEBUG")] private void ShowDebug() {
+            Show();
+        }
+
+        [Conditional("DEBUG")] public void AddDebug(string msg) {
             try {
                 if(!InvokeRequired) {
                     outputbox.AppendText(msg + Environment.NewLine);
@@ -37,6 +43,12 @@
 
         private void ContextMenuStrip1Opening(object sender, CancelEventArgs e) {
             e.Cancel = outputbox.Text.Length == 0;
+        }
+
+        private void DebugFormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+                e.Cancel = true;
         }
     }
 }

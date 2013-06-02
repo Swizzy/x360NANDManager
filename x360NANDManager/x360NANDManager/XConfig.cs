@@ -1,9 +1,8 @@
 ﻿namespace x360NANDManager {
     using System;
-    using System.Globalization;
     using System.IO;
 
-    public sealed class XConfig : FlasherOutput {
+    public sealed class XConfig {
         internal XConfig(uint config) {
             if(config == 0)
                 throw new ArgumentException("Bad config value! (0)");
@@ -102,73 +101,84 @@
         public uint SizeBytes { get; private set; }
         public uint SizeRawBytes { get; private set; }
 
-        public void PrintXConfig(int verboselevel = 0) {
-            if(verboselevel >= 0)
-                UpdateStatus(string.Format("FlashConfig:         0x{0:X08}", Config));
-            if(verboselevel >= 1) {
-                UpdateStatus(string.Format("Page Size:           0x{0:X}", PageSize));
-                UpdateStatus(string.Format("Meta Size:           0x{0:X}", MetaSize));
-                UpdateStatus(string.Format("Meta Type:           0x{0:X}", MetaType));
-                UpdateStatus(string.Format("Block Size (RAW):    0x{0:X}", BlockRawSize));
-                UpdateStatus(string.Format("Block Size:          0x{0:X}", BlockSize));
-            }
-            if(verboselevel >= 2)
-                UpdateStatus(string.Format("Pages Per Block:     {0}", PagesPerBlock));
-            if(verboselevel >= 0)
-                UpdateStatus(string.Format("Size Blocks:         0x{0:X}", SizeBlocks));
-            if(verboselevel >= 2) {
-                UpdateStatus(string.Format("Small BlocksCount:   0x{0:X}", SizeSmallBlocks));
-                UpdateStatus(string.Format("File Blocks:         0x{0:X}", FSBlocks));
-            }
-            if(verboselevel >= 1) {
-                UpdateStatus(string.Format(new NumberFormatInfo {
-                                                                NumberGroupSeparator = " ", NumberDecimalDigits = 0
-                                                                }, "Size Bytes:          {0:N} B", SizeBytes));
-                UpdateStatus(string.Format(new NumberFormatInfo {
-                                                                NumberGroupSeparator = " ", NumberDecimalDigits = 0
-                                                                }, "Size Bytes (RAW):    {0:N} B", SizeRawBytes));
-                UpdateStatus(string.Format("Size Readable:       {0}", GetSizeReadable(SizeBytes)));
-                UpdateStatus(string.Format("Size Readable (RAW): {0}", GetSizeReadable(SizeBytes)));
-            }
-            if(verboselevel >= 3) {
-                UpdateStatus(string.Format("Controller Type:     {0}", ControllerType));
-                UpdateStatus(string.Format("Block Type:          {0}", BlockType));
-            }
-        }
-
+        /// <summary>
+        ///   Converts RAW Block count (PageSize (0x200) + MetaSize (0x10) * PagesPerBlock (0x20)) to Actual data size
+        ///   <exception cref="ArgumentException">If Size isn't dividable by BlockRawSize</exception>
+        /// </summary>
+        /// <param name="blocks"> Blocks to convert to size </param>
+        /// <returns> Size </returns>
         internal uint BlocksToDataSize(uint blocks) {
             return (BlockRawSize * blocks);
         }
 
+        /// <summary>
+        ///   Converts Data Size to RAW Block count (PageSize (0x200) + MetaSize (0x10) * PagesPerBlock (0x20))
+        ///   <exception cref="ArgumentException">If Size isn't dividable by BlockRawSize</exception>
+        /// </summary>
+        /// <param name="size"> Size to convert to blocks </param>
+        /// <returns> BlockCount </returns>
+        internal uint SizeToRawBlocks(long size) {
+            if(size % 0x4200 == 0)
+                return (uint) (size / 0x4200);
+            throw new ArgumentException("Size isn't dividable by RAW Block Size!");
+        }
+
+        /// <summary>
+        ///   Converts Data Size to Block count (PageSize (0x200) * PagesPerBlock (0x20))
+        ///   <exception cref="ArgumentException">If Size isn't dividable by BlockSize</exception>
+        /// </summary>
+        /// <param name="size"> Size to convert to blocks </param>
+        /// <returns> BlockCount </returns>
+        internal uint SizeToBlocks(long size) {
+            if(size % 0x4000 == 0)
+                return (uint) (size / 0x4000);
+            throw new ArgumentException("Size isn't dividable by Block Size!");
+        }
+
+        /// <summary>
+        ///   Make sure the block count is valid (if 0, set it to whatever the flashconfig says is right with the startblock else make sure it's within a valid range)
+        /// </summary>
+        /// <param name="startblock"> BlockID which the operation should start at </param>
+        /// <param name="blocks"> Block Count specified by user </param>
+        /// <returns> Correct block count (if 0 it'll be calculated) </returns>
         internal uint FixBlockCount(uint startblock, uint blocks) {
             if(blocks == 0)
                 return SizeSmallBlocks - startblock;
             if(blocks > SizeSmallBlocks - startblock)
-                throw new ArgumentException("You cannot erase more blocks then the device have!");
+                throw new ArgumentException("You cannot erase/write more blocks then the device have!");
             return blocks;
         }
 
+        /// <summary>
+        ///   Gets block count from filesize and corrects user specified size if it's to big
+        ///   <exception cref="ArgumentException">If File contains more data then can fit on the device or if the device size cannot be divided by block size</exception>
+        /// </summary>
+        /// <param name="file"> File to get data from </param>
+        /// <param name="blocks"> User specified block count </param>
+        /// <returns> Proper block count to use </returns>
         internal uint GetFileBlockCount(string file, uint blocks = 0) {
             var fi = new FileInfo(file);
-            var ret = (PageSize + MetaSize) * 0x20;
-            if(fi.Length % ret == 0) {
-                ret = (uint) (fi.Length / ret);
-                if(ret > SizeSmallBlocks)
-                    throw new ArgumentException("File is to big!");
-                if(blocks == 0 || blocks > ret)
+            Main.SendDebug(string.Format("File length: 0x{0:X}", fi.Length));
+            try {
+                var ret = SizeToRawBlocks(fi.Length);
+                Main.SendDebug(string.Format("RAW Blocks: 0x{0:X}", ret));
+                if (blocks == 0 || blocks > ret)
                     return ret;
                 return blocks;
             }
-            ret = (PageSize * 0x20);
-            if(fi.Length % ret == 0) {
-                ret = (uint) (fi.Length / ret);
-                if(ret > SizeSmallBlocks)
-                    throw new ArgumentException("File is to big!");
-                if(blocks == 0 || blocks > ret)
-                    return ret;
-                return blocks;
+            catch(Exception) {
+                try {
+                    var ret = SizeToBlocks(fi.Length);
+                    Main.SendDebug(string.Format("Blocks: 0x{0:X}", ret));
+                    if (blocks == 0 || blocks > ret)
+                        return ret;
+                    return blocks;
+                }
+                catch(Exception) {
+                    throw new ArgumentException("Filesize is not dividable by block size netheir raw nor logical!");
+                }
+                
             }
-            throw new ArgumentException("Filesize is not dividable by block size netheir raw nor logical!");
         }
 
         public override string ToString() {

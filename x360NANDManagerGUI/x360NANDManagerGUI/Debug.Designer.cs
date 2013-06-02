@@ -80,6 +80,7 @@
             this.Controls.Add(this.outputbox);
             this.Name = "Debug";
             this.Text = "debug";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DebugFormClosing);
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 

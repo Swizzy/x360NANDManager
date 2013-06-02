@@ -55,11 +55,12 @@
     <Compile Include="BlockUtils.cs" />
     <Compile Include="EventArg.cs" />
     <Compile Include="IFlasherOutput.cs" />
-    <Compile Include="MMC\IFlasher.cs" />
+    <Compile Include="MMC\MMCdevice.cs" />
+    <Compile Include="MMC\MMCFlasher.cs" />
+    <Compile Include="MMC\IMMCFlasher.cs" />
     <Compile Include="SPI\ARMFlasher.cs" />
     <Compile Include="FlasherOutput.cs" />
     <Compile Include="SPI\ISPIFlasher.cs" />
-    <Compile Include="MMC\MMC.cs" />
     <Compile Include="MMC\Native.cs" />
     <Compile Include="DeviceError.cs" />
     <Compile Include="Main.cs" />

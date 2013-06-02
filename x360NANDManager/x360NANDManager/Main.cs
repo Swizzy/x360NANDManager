@@ -2,6 +2,7 @@
     using System;
     using System.Diagnostics;
     using System.Reflection;
+    using x360NANDManager.MMC;
     using x360NANDManager.SPI;
 
     public static class Main{
@@ -28,6 +29,10 @@
 
         public static ISPIFlasher GetSPIFlasher() {
             return new ARMFlasher();
+        }
+
+        public static IMMCFlasher GetMMCFlasher() {
+            return  new MMCFlasher();
         }
 
         public static event EventHandler<EventArg<string>> Debug;

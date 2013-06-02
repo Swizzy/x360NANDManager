@@ -57,7 +57,7 @@
         //    data = data2;
         //}
 
-        protected static byte[] AddSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
+        protected static byte[] AddSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
             var ret = new byte[0x4200];
             var dataoffset = 0;
             var page = block * 0x20;
@@ -95,7 +95,7 @@
         //        CorrectSpareBlock(ref data, block, metaType);
         //}
 
-        protected static void CorrectSpareBlock(ref byte[] data, uint block, int metaType = 0x0) {
+        protected static void CorrectSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
             var offset = 0;
             for (var page = block * 0x20; page < (block * 0x20) + 0x20; page++, offset += 0x210)
             {

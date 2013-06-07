@@ -8,10 +8,9 @@
     internal sealed partial class Debug : Form {
         internal Debug() {
             InitializeComponent();
-            ShowDebug();
         }
 
-        [Conditional("DEBUG")] private void ShowDebug() {
+        [Conditional("DEBUG")] public void ShowDebug() {
             Show();
         }
 

@@ -5,13 +5,33 @@
     using System.IO;
     using System.Windows.Forms;
     using x360NANDManager;
+    using x360NANDManager.MMC;
     using x360NANDManager.SPI;
+    using x360NANDManager.XSVF;
+    using x360NANDManagerGUI.Properties;
 
     internal sealed partial class MainForm : Form {
         private readonly Debug _dbg = new Debug();
         private bool _abort;
         private Stopwatch _sw = new Stopwatch();
-        private ISPIFlasher _xNANDManagerSPI;
+        private ISPIFlasher _spiFlasher;
+        private IMMCFlasher _mmcFlasher;
+        private IXSVFFlasher _xsvfFlasher;
+
+        internal static string GetSizeReadable(long i)
+        {
+            if (i >= 0x1000000000000000) // Exabyte
+                return string.Format("{0:0.##} EB", (double)(i >> 50) / 1024);
+            if (i >= 0x4000000000000) // Petabyte
+                return string.Format("{0:0.##} PB", (double)(i >> 40) / 1024);
+            if (i >= 0x10000000000) // Terabyte
+                return string.Format("{0:0.##} TB", (double)(i >> 30) / 1024);
+            if (i >= 0x40000000) // Gigabyte
+                return string.Format("{0:0.##} GB", (double)(i >> 20) / 1024);
+            if (i >= 0x100000) // Megabyte
+                return string.Format("{0:0.##} MB", (double)(i >> 10) / 1024);
+            return i >= 0x400 ? string.Format("{0:0.##} KB", (double)i / 1024) : string.Format("{0} B", i);
+        }
 
         public MainForm() {
             InitializeComponent();
@@ -19,7 +39,8 @@
 
         private void Form1Load(object sender, EventArgs e) {
             Main.Debug += MainOnDebug;
-            dllversionlabel.Text = Main.Version;
+            dllversionlabel.Text = Main.Version.Replace("x360NANDManager", "DLL");
+            _dbg.ShowDebug();
         }
 
         private void MainOnDebug(object sender, EventArg<string> e) {
@@ -36,18 +57,27 @@
             readbtn.Enabled = !busy;
             erasebtn.Enabled = !busy;
             writebtn.Enabled = !busy;
+            xsvfbtn.Enabled = !busy;
         }
 
         private void MainOnProgress(object sender, EventArg<ProgressData> e) {
-            SetProgress((int) e.Data.Percentage);
+            SetProgress(e.Data);
+
         }
 
-        private void SetProgress(int value) {
+        private void SetProgress(ProgressData data) {
             try {
-                if(!InvokeRequired)
-                    progress.Value = value;
+                if(!InvokeRequired) {
+                    progress.Value = (int) data.Percentage;
+                    if(spi.Checked && _xsvfFlasher == null)
+                        statuslbl.Text = string.Format("Processed block 0x{0:X} of 0x{1:X}", data.Current, data.Maximum);
+                    else {
+                        statuslbl.Text = string.Format("Processed {0} of {1} ({2}/s)", GetSizeReadable(data.Current), GetSizeReadable(data.Maximum), GetSizeReadable((long) (data.Current / _sw.Elapsed.TotalSeconds)));
+                    }
+
+                }
                 else
-                    Invoke(new MethodInvoker(() => SetProgress(value)));
+                    Invoke(new MethodInvoker(() => SetProgress(data)));
             }
             catch {
             }
@@ -74,55 +104,123 @@
         }
 
         private void BackgroundWorker1DoWork(object sender, DoWorkEventArgs e) {
+            _abort = false;
             _sw = Stopwatch.StartNew();
             if(!(e.Argument is BWArgs))
                 return;
             var args = e.Argument as BWArgs;
-            try {
-                if(args.Device == BWArgs.Devices.MMC)
-                    throw new NotImplementedException();
-                _xNANDManagerSPI = Main.GetSPIFlasher();
-                if(_xNANDManagerSPI == null) {
-                    e.Result = false;
-                    return;
+            try
+            {
+                #region XSVF
+
+                if (args.Operation == BWArgs.Operations.XSVF) {
+                    try {
+                        _xsvfFlasher = Main.GetXSVFFlasher();
+                        _xsvfFlasher.Error += MainOnError;
+                        _xsvfFlasher.Status += MainOnError;
+                        _xsvfFlasher.Progress += MainOnProgress;
+                        _xsvfFlasher.WriteXSVF(args.File);
+                        e.Result = true;
+                    }
+                    catch(DeviceError ex) {
+                        if(ex.ErrorLevel == DeviceError.ErrorLevels.IncompatibleDevice)
+                            MessageBox.Show(Resources.IncompatibleXSVF);
+                        else
+                            throw;
+                    }
                 }
-                _xNANDManagerSPI.Error += MainOnError;
-                _xNANDManagerSPI.Status += MainOnError;
-                _xNANDManagerSPI.Progress += MainOnProgress;
-                switch(args.Operation) {
-                    case BWArgs.Operations.Read:
-                        e.Result = true;
-                        _xNANDManagerSPI.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, 1);
-                        break;
-                    case BWArgs.Operations.Erase:
-                        e.Result = true;
-                        _xNANDManagerSPI.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
-                        break;
-                    case BWArgs.Operations.Write:
-                        e.Result = true;
-                        var mode = SPIWriteModes.None;
-                        if (args.AddSpare)
-                            mode |= SPIWriteModes.AddSpare;
-                        else if (args.CorrectSpare)
-                            mode |= SPIWriteModes.CorrectSpare;
-                        if (args.EraseFirst)
-                            mode |= SPIWriteModes.EraseFirst;
-                        if (args.Verify)
-                            mode |= SPIWriteModes.VerifyAfter;
-                        _xNANDManagerSPI.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, mode, 1);
-                        break;
-                    default:
-                        throw new Exception("Unkown Operation");
+
+                #endregion
+                else if(args.Device == BWArgs.Devices.MMC) {
+                    if (args.MMCDevice == null)
+                        throw new Exception("Something went horribly wrong here!!");
+                    _mmcFlasher = Main.GetMMCFlasher(args.MMCDevice);
+                    if (_mmcFlasher == null) {
+                        e.Result = false;
+                        return;
+                    }
+                    _mmcFlasher.Error += MainOnError;
+                    _mmcFlasher.Status += MainOnError;
+                    _mmcFlasher.Progress += MainOnProgress;
+                    e.Result = true;
+                    switch(args.Operation) {
+                        case BWArgs.Operations.Read:
+                            _mmcFlasher.Read(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value);
+                            break;
+                        case BWArgs.Operations.Erase:
+                            _mmcFlasher.ZeroData((long)mmcoffsetbox.Value, (long)mmccountbox.Value);
+                            break;
+                        case BWArgs.Operations.Write:
+                            _mmcFlasher.Write(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value, args.Verify);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                else {
+                    _spiFlasher = Main.GetSPIFlasher();
+                    if(_spiFlasher == null) {
+                        e.Result = false;
+                        return;
+                    }
+                    _spiFlasher.Error += MainOnError;
+                    _spiFlasher.Status += MainOnError;
+                    _spiFlasher.Progress += MainOnProgress;
+                    e.Result = true;
+                    switch(args.Operation) {
+                        case BWArgs.Operations.Read:
+                            _spiFlasher.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, 1);
+                            break;
+                        case BWArgs.Operations.Erase:
+                            _spiFlasher.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
+                            break;
+                        case BWArgs.Operations.Write:
+                            var mode = SPIWriteModes.None;
+                            if(args.AddSpare)
+                                mode |= SPIWriteModes.AddSpare;
+                            else if(args.CorrectSpare)
+                                mode |= SPIWriteModes.CorrectSpare;
+                            if(args.EraseFirst)
+                                mode |= SPIWriteModes.EraseFirst;
+                            if(args.Verify)
+                                mode |= SPIWriteModes.VerifyAfter;
+                            _spiFlasher.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, mode, 1);
+                            break;
+                        default:
+                            throw new Exception("Unkown Operation");
+                    }
                 }
             }
+                catch (Exception ex) {
+                    MessageBox.Show(string.Format("Internal Exception: {0}{1}", Environment.NewLine, ex));
+                }
             finally {
-                if(args.Device == BWArgs.Devices.SPI) {
-                    if(_xNANDManagerSPI != null) {
-                        _xNANDManagerSPI.Error -= MainOnError;
-                        _xNANDManagerSPI.Status -= MainOnError;
-                        _xNANDManagerSPI.Progress -= MainOnProgress;
+                switch(args.Device) {
+                    case BWArgs.Devices.SPI:
+                        if(_spiFlasher != null) {
+                            _spiFlasher.Error -= MainOnError;
+                            _spiFlasher.Status -= MainOnError;
+                            _spiFlasher.Progress -= MainOnProgress;
+                        }
+                        _spiFlasher = null;
+                        break;
+                    case BWArgs.Devices.MMC:
+                        if(_mmcFlasher != null)
+                        {
+                            _mmcFlasher.Error -= MainOnError;
+                            _mmcFlasher.Status -= MainOnError;
+                            _mmcFlasher.Progress -= MainOnProgress;
+                        }
+                        _mmcFlasher = null;
+                        break;
+                }
+                if (args.Operation == BWArgs.Operations.XSVF) {
+                    if (_xsvfFlasher != null) {
+                        _xsvfFlasher.Error -= MainOnError;
+                        _xsvfFlasher.Status -= MainOnError;
+                        _xsvfFlasher.Progress -= MainOnProgress;
                     }
-                    _xNANDManagerSPI = null;
+                    _xsvfFlasher = null;
                 }
             }
         }
@@ -143,7 +241,7 @@
 
         private void WritebtnClick(object sender, EventArgs e) {
             var ofd = new OpenFileDialog {
-                                         FileName = "updflash.bin", Title = "Select where to save the dump..."
+                                         FileName = "updflash.bin", Title = "Select File to write"
                                          };
             if(ofd.ShowDialog() != DialogResult.OK)
                 return;
@@ -194,20 +292,44 @@
         }
 
         private void DeviceCheckedChanged(object sender, EventArgs e) {
+            if(mmc.Checked && sender == mmc)
+                mmcdevice.DataSource = Main.GetMMCDeviceList();
+            else if (sender == mmc)
+                mmcdevice.DataSource = null;
             mmcoffsetbox.Enabled = mmc.Checked;
             mmccountbox.Enabled = mmc.Checked;
             mmcdevice.Enabled = mmc.Checked;
+            mmclbl.Enabled = mmc.Checked;
             spiblockbox.Enabled = !mmc.Checked;
             spicountbox.Enabled = !mmc.Checked;
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
-            _xNANDManagerSPI.Abort();
+            if (_spiFlasher != null)
+                _spiFlasher.Abort();
+            if (_xsvfFlasher != null)
+                _xsvfFlasher.Abort();
+            if (_mmcFlasher != null)
+                _mmcFlasher.Abort();
             _abort = true;
         }
 
         private void HclinkClick(object sender, EventArgs e) {
             Process.Start("http://www.homebrew-connection.org");
+        }
+
+        private void XsvfbtnClick(object sender, EventArgs e) {
+            var ofd = new OpenFileDialog {
+                                         FileName = "xc2c64a.xsvf", Title = "Select File to write"
+                                         };
+            if(ofd.ShowDialog() != DialogResult.OK)
+                return;
+            outputbox.Text = "";
+            var args = new BWArgs(BWArgs.Operations.XSVF) {
+                                                          File = ofd.FileName
+                                                          };
+            bw.RunWorkerAsync(args);
+            SetAppState(true);
         }
 
         #region Nested type: BWArgs
@@ -220,6 +342,7 @@
             public readonly Operations Operation;
             public readonly bool Verify;
             public string File;
+            public readonly MMCDevice MMCDevice;
 
             public BWArgs(Operations op) {
                 Operation = op;
@@ -233,6 +356,8 @@
                     }
                     Device = Devices.None;
                 }
+                if (Program.MainForm.mmcdevice.SelectedItem != null)
+                    MMCDevice = Program.MainForm.mmcdevice.SelectedItem as MMCDevice;
                 Verify = Program.MainForm.verifyBox.Checked;
                 EraseFirst = Program.MainForm.eraseBox.Checked;
                 AddSpare = Program.MainForm.addSpareBox.Checked;
@@ -254,12 +379,33 @@
             internal enum Operations {
                 Read,
                 Erase,
-                Write
+                Write,
+                XSVF
             }
 
             #endregion
         }
 
         #endregion
+
+        private void MmcdeviceSelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(mmcdevice.SelectedIndex > mmcdevice.Items.Count)
+                return;
+            var tmp = mmcdevice.Items[mmcdevice.SelectedIndex] as x360NANDManager.MMC.MMCDevice;
+            if (tmp == null) {
+                mmccountbox.Maximum = 0;
+                mmcoffsetbox.Maximum = 0;
+                mmccountbox.Increment = 1;
+                mmcoffsetbox.Increment = 1;
+            }
+            else
+            {
+                mmccountbox.Maximum = tmp.Size;
+                mmcoffsetbox.Maximum = tmp.Size - 1;
+                mmccountbox.Increment = tmp.DiskGeometry.BytesPerSector;
+                mmcoffsetbox.Increment = tmp.DiskGeometry.BytesPerSector;
+            }
+        }
     }
 }

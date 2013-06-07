@@ -61,7 +61,7 @@
     <Compile Include="SPI\ARMFlasher.cs" />
     <Compile Include="FlasherOutput.cs" />
     <Compile Include="SPI\ISPIFlasher.cs" />
-    <Compile Include="MMC\Native.cs" />
+    <Compile Include="NativeWin32.cs" />
     <Compile Include="DeviceError.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -70,6 +70,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="XSVF\JRPXSVFFlasher.cs" />
+    <Compile Include="XSVF\IXSVFFlasher.cs" />
+    <Compile Include="XSVF\ARMXSVFFlasher.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="XConfig.cs" />
   </ItemGroup>
@@ -89,13 +92,11 @@
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="XSVF\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.None" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.None" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

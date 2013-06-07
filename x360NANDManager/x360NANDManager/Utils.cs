@@ -26,13 +26,13 @@
             return array;
         }
 
-        internal static void RemoveDuplicatesInList<T>(ref List<T> list) {
+        internal static T[] RemoveDuplicatesInList<T>(IEnumerable<T> list) {
             var newlist = new List<T>();
             foreach(var tmp in list) {
                 if(!newlist.Contains(tmp))
                     newlist.Add(tmp);
             }
-            list = newlist;
+            return newlist.ToArray();
         }
 
         //public bool CompareByteArrays(byte[] a1, byte[] a2) {
@@ -47,13 +47,13 @@
         //    return true;
         //}
 
-        internal static bool CompareByteArrays(byte[] src, byte[] target, int offset) {
-            if(src == target)
+        internal static bool CompareByteArrays(byte[] buf, byte[] megabuf, int offset) {
+            if(buf == megabuf)
                 return true;
-            if(src == null || target == null || src.Length > target.Length - offset)
+            if(buf == null || megabuf == null || buf.Length > megabuf.Length - offset)
                 return false;
-            for(var i = 0; i < src.Length; i++) {
-                if(src[i] != target[offset + i])
+            for(var i = 0; i < buf.Length; i++) {
+                if(buf[i] != megabuf[offset + i])
                     return false;
             }
             return true;
@@ -64,7 +64,7 @@
                 if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     return drive.TotalFreeSpace;
             }
-            return -1;
+            throw new DirectoryNotFoundException();
         }
 
         public bool FileSystemHas4GBSupport(string path) {
@@ -72,7 +72,7 @@
                 if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     return !drive.DriveFormat.StartsWith("FAT", StringComparison.CurrentCultureIgnoreCase);
             }
-            return false;
+            throw new DirectoryNotFoundException();
         }
 
         internal static BinaryReader OpenReader(string file) {

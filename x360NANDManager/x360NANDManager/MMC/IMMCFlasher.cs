@@ -1,37 +1,37 @@
 ﻿namespace x360NANDManager.MMC
 {
-    using System;
     using System.Collections.Generic;
 
-    public interface IMMCFlasher
+    public interface IMMCFlasher : IFlasherOutput
     {
-        void Init();
-
         void Release();
 
-        void Reset();
+        void Reset(bool read = true);
 
-        void ZeroData(long offset, long length, int verboseLevel);
+        void Abort();
 
-        void Write(long offset, long length, byte[] data, MMCWriteModes mode = MMCWriteModes.None, int verboseLevel = 0);
+        void ZeroData(long startSector = 0, long sectorCount = 0);
 
-        void Write(long offset, long length, string file, MMCWriteModes mode = MMCWriteModes.None, int verboseLevel = 0);
+        void ZeroDataEX(long offset = 0, long length = 0);
 
-        void Read(long offset, long length, out byte[] data, int verboseLevel = 0);
+        void Write(byte[] data, long startSector = 0, long sectorCount = 0, bool verify = true);
 
-        void Read(long offset, long length, string file, int verboseLevel = 0);
+        void Write(string file, long startSector = 0, long sectorCount = 0, bool verify = true);
 
-        void Read(long offset, long length, List<string> files, int verboseLevel = 0);
+        void WriteEX(byte[] data, long startSector = 0, long sectorCount = 0, bool verify = true);
 
-        List<MMCDevice> GetDevices();
+        void WriteEX(string file, long startSector = 0, long sectorCount = 0, bool verify = true);
+
+        byte[] Read(long startSector = 0, long sectorCount = 0);
+
+        void Read(string file, long startSector = 0, long sectorCount = 0);
+
+        void Read(IEnumerable<string> files, long startSector = 0, long sectorCount = 0);
+
+        byte[] ReadEX(long offset = 0, long length = 0);
+
+        void ReadEX(string file, long offset = 0, long length = 0);
+
+        void ReadEX(IEnumerable<string> files, long offset = 0, long length = 0);
     }
-
-    [Flags]
-    public enum MMCWriteModes
-    {
-        None = 0,
-        EraseFirst = 1,
-        VerifyAfter = 2
-    }
-
 }

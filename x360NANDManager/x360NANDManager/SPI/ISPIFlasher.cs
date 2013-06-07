@@ -33,13 +33,13 @@
 
         #region Read
 
-        void ReadBlock(uint blockID, out byte[] data, int verboseLevel = 0);
+        byte[] ReadBlock(uint blockID, int verboseLevel = 0);
 
-        void Read(uint startBlock, uint blockCount, out byte[] data, int verboseLevel = 0);
+        byte[] Read(uint startBlock, uint blockCount, int verboseLevel = 0);
 
         void Read(uint startBlock, uint blockCount, string file, int verboseLevel = 0);
 
-        void Read(uint startBlock, uint blockCount, List<string> files, int verboseLevel = 0);
+        void Read(uint startBlock, uint blockCount, IEnumerable<string> files, int verboseLevel = 0);
 
         #endregion Read
     }
@@ -49,6 +49,7 @@
         AddSpare = 1,
         CorrectSpare = 2,
         EraseFirst = 4,
-        VerifyAfter = 8
+        VerifyAfter = 8,
+        
     }
 }

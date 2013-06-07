@@ -54,7 +54,7 @@
             this.rawbox = new System.Windows.Forms.RadioButton();
             this.verifyBox = new System.Windows.Forms.CheckBox();
             this.eraseBox = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.mmclbl = new System.Windows.Forms.Label();
             this.mmcdevice = new System.Windows.Forms.ComboBox();
             this.correctSpareBox = new System.Windows.Forms.RadioButton();
             this.addSpareBox = new System.Windows.Forms.RadioButton();
@@ -64,6 +64,9 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.dllversionlabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.hclink = new System.Windows.Forms.ToolStripStatusLabel();
+            this.xsvfbtn = new System.Windows.Forms.Button();
+            this.statusStrip2 = new System.Windows.Forms.StatusStrip();
+            this.statuslbl = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBox2.SuspendLayout();
             this.logmenu.SuspendLayout();
             this.optionsbox.SuspendLayout();
@@ -74,6 +77,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.spicountbox)).BeginInit();
             this.devices.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.statusStrip2.SuspendLayout();
             this.SuspendLayout();
             // 
             // readbtn
@@ -95,13 +99,14 @@
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(12, 278);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(423, 399);
+            this.groupBox2.Size = new System.Drawing.Size(423, 377);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "output";
             // 
             // outputbox
             // 
+            this.outputbox.AcceptsTab = true;
             this.outputbox.BackColor = System.Drawing.Color.Black;
             this.outputbox.ContextMenuStrip = this.logmenu;
             this.outputbox.Cursor = System.Windows.Forms.Cursors.Default;
@@ -111,7 +116,7 @@
             this.outputbox.Location = new System.Drawing.Point(3, 16);
             this.outputbox.Name = "outputbox";
             this.outputbox.ReadOnly = true;
-            this.outputbox.Size = new System.Drawing.Size(417, 380);
+            this.outputbox.Size = new System.Drawing.Size(417, 358);
             this.outputbox.TabIndex = 3;
             this.outputbox.Text = "";
             this.outputbox.WordWrap = false;
@@ -172,7 +177,7 @@
             this.optionsbox.Controls.Add(this.rawbox);
             this.optionsbox.Controls.Add(this.verifyBox);
             this.optionsbox.Controls.Add(this.eraseBox);
-            this.optionsbox.Controls.Add(this.label1);
+            this.optionsbox.Controls.Add(this.mmclbl);
             this.optionsbox.Controls.Add(this.mmcdevice);
             this.optionsbox.Controls.Add(this.correctSpareBox);
             this.optionsbox.Controls.Add(this.addSpareBox);
@@ -186,7 +191,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 149);
+            this.label3.Location = new System.Drawing.Point(16, 149);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(62, 13);
             this.label3.TabIndex = 0;
@@ -195,38 +200,38 @@
             // spiblockbox
             // 
             this.spiblockbox.Hexadecimal = true;
-            this.spiblockbox.Location = new System.Drawing.Point(74, 147);
+            this.spiblockbox.Location = new System.Drawing.Point(84, 147);
             this.spiblockbox.Maximum = new decimal(new int[] {
             32767,
             0,
             0,
             0});
             this.spiblockbox.Name = "spiblockbox";
-            this.spiblockbox.Size = new System.Drawing.Size(67, 20);
+            this.spiblockbox.Size = new System.Drawing.Size(57, 20);
             this.spiblockbox.TabIndex = 1;
             // 
             // mmccountbox
             // 
             this.mmccountbox.Enabled = false;
             this.mmccountbox.Hexadecimal = true;
-            this.mmccountbox.Location = new System.Drawing.Point(74, 121);
+            this.mmccountbox.Location = new System.Drawing.Point(84, 121);
             this.mmccountbox.Maximum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.mmccountbox.Name = "mmccountbox";
-            this.mmccountbox.Size = new System.Drawing.Size(208, 20);
+            this.mmccountbox.Size = new System.Drawing.Size(198, 20);
             this.mmccountbox.TabIndex = 1;
             // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(38, 123);
+            this.label6.Location = new System.Drawing.Point(6, 123);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(30, 13);
+            this.label6.Size = new System.Drawing.Size(72, 13);
             this.label6.TabIndex = 0;
-            this.label6.Text = "Size:";
+            this.label6.Text = "Sector Count:";
             // 
             // dumpcount
             // 
@@ -255,14 +260,14 @@
             // 
             this.mmcoffsetbox.Enabled = false;
             this.mmcoffsetbox.Hexadecimal = true;
-            this.mmcoffsetbox.Location = new System.Drawing.Point(74, 95);
+            this.mmcoffsetbox.Location = new System.Drawing.Point(84, 95);
             this.mmcoffsetbox.Maximum = new decimal(new int[] {
             1,
             0,
             0,
             0});
             this.mmcoffsetbox.Name = "mmcoffsetbox";
-            this.mmcoffsetbox.Size = new System.Drawing.Size(208, 20);
+            this.mmcoffsetbox.Size = new System.Drawing.Size(198, 20);
             this.mmcoffsetbox.TabIndex = 1;
             // 
             // label2
@@ -278,11 +283,11 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(30, 97);
+            this.label4.Location = new System.Drawing.Point(12, 97);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(38, 13);
+            this.label4.Size = new System.Drawing.Size(66, 13);
             this.label4.TabIndex = 0;
-            this.label4.Text = "Offset:";
+            this.label4.Text = "Start Sector:";
             // 
             // spicountbox
             // 
@@ -311,7 +316,6 @@
             // mmc
             // 
             this.mmc.AutoSize = true;
-            this.mmc.Enabled = false;
             this.mmc.Location = new System.Drawing.Point(6, 42);
             this.mmc.Name = "mmc";
             this.mmc.Size = new System.Drawing.Size(117, 17);
@@ -374,15 +378,15 @@
             this.eraseBox.Text = "Erase Before Write";
             this.eraseBox.UseVisualStyleBackColor = true;
             // 
-            // label1
+            // mmclbl
             // 
-            this.label1.AutoSize = true;
-            this.label1.Enabled = false;
-            this.label1.Location = new System.Drawing.Point(6, 71);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "MMC:";
+            this.mmclbl.AutoSize = true;
+            this.mmclbl.Enabled = false;
+            this.mmclbl.Location = new System.Drawing.Point(6, 71);
+            this.mmclbl.Name = "mmclbl";
+            this.mmclbl.Size = new System.Drawing.Size(35, 13);
+            this.mmclbl.TabIndex = 4;
+            this.mmclbl.Text = "MMC:";
             // 
             // mmcdevice
             // 
@@ -393,6 +397,7 @@
             this.mmcdevice.Name = "mmcdevice";
             this.mmcdevice.Size = new System.Drawing.Size(370, 21);
             this.mmcdevice.TabIndex = 3;
+            this.mmcdevice.SelectedIndexChanged += new System.EventHandler(this.MmcdeviceSelectedIndexChanged);
             // 
             // correctSpareBox
             // 
@@ -434,7 +439,7 @@
             this.abortbtn.Enabled = false;
             this.abortbtn.Location = new System.Drawing.Point(12, 220);
             this.abortbtn.Name = "abortbtn";
-            this.abortbtn.Size = new System.Drawing.Size(423, 23);
+            this.abortbtn.Size = new System.Drawing.Size(264, 23);
             this.abortbtn.TabIndex = 1;
             this.abortbtn.Text = "Cancel/Abort";
             this.abortbtn.UseVisualStyleBackColor = true;
@@ -467,20 +472,49 @@
             this.hclink.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.hclink.Click += new System.EventHandler(this.HclinkClick);
             // 
-            // Form1
+            // xsvfbtn
+            // 
+            this.xsvfbtn.Location = new System.Drawing.Point(282, 220);
+            this.xsvfbtn.Name = "xsvfbtn";
+            this.xsvfbtn.Size = new System.Drawing.Size(153, 23);
+            this.xsvfbtn.TabIndex = 1;
+            this.xsvfbtn.Text = "Flash XSVF";
+            this.xsvfbtn.UseVisualStyleBackColor = true;
+            this.xsvfbtn.Click += new System.EventHandler(this.XsvfbtnClick);
+            // 
+            // statusStrip2
+            // 
+            this.statusStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statuslbl});
+            this.statusStrip2.Location = new System.Drawing.Point(0, 658);
+            this.statusStrip2.Name = "statusStrip2";
+            this.statusStrip2.Size = new System.Drawing.Size(447, 22);
+            this.statusStrip2.SizingGrip = false;
+            this.statusStrip2.TabIndex = 5;
+            this.statusStrip2.Text = "statusStrip2";
+            // 
+            // statuslbl
+            // 
+            this.statuslbl.Name = "statuslbl";
+            this.statuslbl.Size = new System.Drawing.Size(52, 17);
+            this.statuslbl.Text = "Progress";
+            // 
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(447, 702);
+            this.Controls.Add(this.statusStrip2);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.optionsbox);
             this.Controls.Add(this.progress);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.erasebtn);
             this.Controls.Add(this.writebtn);
+            this.Controls.Add(this.xsvfbtn);
             this.Controls.Add(this.abortbtn);
             this.Controls.Add(this.readbtn);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "x360NANDManager GUI";
             this.Load += new System.EventHandler(this.Form1Load);
             this.groupBox2.ResumeLayout(false);
@@ -496,6 +530,8 @@
             this.devices.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.statusStrip2.ResumeLayout(false);
+            this.statusStrip2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -515,7 +551,7 @@
         private System.Windows.Forms.CheckBox verifyBox;
         private System.Windows.Forms.Button writebtn;
         private System.ComponentModel.BackgroundWorker bw;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label mmclbl;
         private System.Windows.Forms.ComboBox mmcdevice;
         private System.Windows.Forms.RadioButton rawbox;
         private System.Windows.Forms.GroupBox devices;
@@ -538,6 +574,9 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel dllversionlabel;
         private System.Windows.Forms.ToolStripStatusLabel hclink;
+        private System.Windows.Forms.Button xsvfbtn;
+        private System.Windows.Forms.StatusStrip statusStrip2;
+        private System.Windows.Forms.ToolStripStatusLabel statuslbl;
     }
 }
 

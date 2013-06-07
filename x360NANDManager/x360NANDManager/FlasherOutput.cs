@@ -2,7 +2,7 @@
     using System;
     using System.Globalization;
 
-    public abstract class FlasherOutput : BlockUtils, IFlasherOutput {
+    internal abstract class FlasherOutput : BlockUtils, IFlasherOutput {
         #region IFlasherOutput Implementation
 
         /// <summary>
@@ -21,32 +21,86 @@
         public event EventHandler<EventArg<ProgressData>> Progress;
 
         /// <summary>
-        /// Fires the <seealso cref="Progress"/> event with specified information
+        ///   Fires the <seealso cref="Progress" /> event with specified information
         /// </summary>
-        /// <param name="current">Current block</param>
-        /// <param name="max">Last Block</param>
-        /// <param name="total"> Total Block (Used for calculating progress with multipile parts)</param>
+        /// <param name="current"> Current block </param>
+        /// <param name="max"> Last Block </param>
+        /// <param name="total"> Total Block (Used for calculating progress with multipile parts) </param>
         public void UpdateProgress(uint current, uint max, uint total = 0) {
-            if(Progress == null)
+            var prg = Progress;
+            if(prg == null)
                 return;
             if(total == 0)
                 total = max;
-            Progress(null, new EventArg<ProgressData>(new ProgressData {
-                                                                       Current = current, Maximum = max, Percentage = ((double) (current + 1) / total) * 100
-                                                                       }));
+            prg(null, new EventArg<ProgressData>(new ProgressData {
+                                                                  Current = current, Maximum = max, Percentage = ((double) (current + 1) / total) * 100
+                                                                  }));
         }
 
+
+        /// <summary>
+        ///   Fires the <seealso cref="Progress" /> event with specified information
+        /// </summary>
+        /// <param name="currentSector"> Current sector </param>
+        /// <param name="lastSector"> Last sector </param>
+        /// <param name="sectorSize"> Size in bytes of each sector (used to convert sectors to offset) </param>
+        /// <param name="bufsize"> Size of buffer (used to correct curent sector information) </param>
+        public void UpdateMMCProgress(long currentSector, long lastSector, int sectorSize, long bufsize) {
+            var prg = Progress;
+            if(prg == null)
+                return;
+            prg(null, new EventArg<ProgressData>(new ProgressData {
+                Current = (currentSector * sectorSize) + bufsize,
+                Maximum = (lastSector * sectorSize),
+                Percentage = (((double)((currentSector * sectorSize) + bufsize) / (lastSector * sectorSize)) * 100)
+            }));
+        }
+
+        /// <summary>
+        ///   Fires the <seealso cref="Progress" /> event with specified information
+        /// </summary>
+        /// <param name="offset"> Current Offset </param>
+        /// <param name="maximum"> Last Offset </param>
+        /// <param name="bufsize"> Size of buffer (used to correct curent sector information) </param>
+        public void UpdateMMCProgressEX(long offset, long maximum, long bufsize) {
+            var prg = Progress;
+            if(prg == null)
+                return;
+            prg(null, new EventArg<ProgressData>(new ProgressData {
+                                                                  Current = offset + bufsize, Maximum = maximum, Percentage = ((double) (offset + bufsize) / maximum) * 100
+                                                                  }));
+        }
+
+        /// <summary>
+        ///   Fires the <seealso cref="Status" /> event with specified message
+        /// </summary>
+        /// <param name="message"> Message to send </param>
         public void UpdateStatus(string message) {
-            if(Status != null && message != null)
-                Status(null, new EventArg<string>(message));
+            var stat = Status;
+            if(stat != null && !string.IsNullOrEmpty(message))
+                stat(null, new EventArg<string>(message));
         }
 
+        /// <summary>
+        ///   Fires the <seealso cref="Error" /> event with specified message, it also forwards the message to the Debug event
+        /// </summary>
+        /// <param name="message"> Message to send </param>
         public void SendError(string message) {
-            if(Error != null && message != null)
-                Error(null, new EventArg<string>(message));
+            var err = Error;
+            if(err == null || string.IsNullOrEmpty(message))
+                return;
+            err(null, new EventArg<string>(message));
             Main.SendDebug(message);
         }
 
+        /// <summary>
+        ///   Checks if the Flash Staus states that we've got a badblock, if <paramref name="verbose" /> is set to true the meaning of the status will be printed aswell
+        /// </summary>
+        /// <param name="status"> Flash Status to check </param>
+        /// <param name="block"> BlockID for current block </param>
+        /// <param name="operation"> Operation message (what are we doing?) </param>
+        /// <param name="verbose"> Set to true for additional information about the status </param>
+        /// <returns> True if the status says the block is bad </returns>
         public bool IsBadBlock(uint status, uint block, string operation, bool verbose = false) {
             if(status != 0x200 && status > 0) {
                 SendError(string.Format("ERROR: 0x{0:X} {1} block 0x{2:X}", status, operation, block));
@@ -84,48 +138,43 @@
 
         #endregion IFlasherOutput Implementation
 
-        public void PrintXConfig(XConfig cfg, int verboselevel = 0)
-        {
-            if (verboselevel >= 0)
+        /// <summary>
+        ///   Prints the <seealso cref="XConfig" /> information
+        /// </summary>
+        /// <param name="cfg"> <seealso cref="XConfig" /> Containing information to be printed </param>
+        /// <param name="verboselevel"> Verbosity level of the output </param>
+        protected void PrintXConfig(XConfig cfg, int verboselevel = 0) {
+            if(verboselevel >= 0)
                 UpdateStatus(string.Format("FlashConfig:         0x{0:X08}", cfg.Config));
-            if (verboselevel >= 1)
-            {
+            if(verboselevel >= 1) {
                 UpdateStatus(string.Format("Page Size:           0x{0:X}", cfg.PageSize));
                 UpdateStatus(string.Format("Meta Size:           0x{0:X}", cfg.MetaSize));
                 UpdateStatus(string.Format("Meta Type:           0x{0:X}", cfg.MetaType));
                 UpdateStatus(string.Format("Block Size (RAW):    0x{0:X}", cfg.BlockRawSize));
                 UpdateStatus(string.Format("Block Size:          0x{0:X}", cfg.BlockSize));
             }
-            if (verboselevel >= 2)
+            if(verboselevel >= 2)
                 UpdateStatus(string.Format("Pages Per Block:     {0}", cfg.PagesPerBlock));
-            if (verboselevel >= 0)
+            if(verboselevel >= 0)
                 UpdateStatus(string.Format("Size Blocks:         0x{0:X}", cfg.SizeBlocks));
-            if (verboselevel >= 2)
-            {
+            if(verboselevel >= 2) {
                 UpdateStatus(string.Format("Small BlocksCount:   0x{0:X}", cfg.SizeSmallBlocks));
                 UpdateStatus(string.Format("File Blocks:         0x{0:X}", cfg.FSBlocks));
             }
-            if (verboselevel >= 1)
-            {
-                UpdateStatus(string.Format(new NumberFormatInfo
-                {
-                    NumberGroupSeparator = " ",
-                    NumberDecimalDigits = 0
-                }, "Size Bytes:          {0:N} B", cfg.SizeBytes));
-                UpdateStatus(string.Format(new NumberFormatInfo
-                {
-                    NumberGroupSeparator = " ",
-                    NumberDecimalDigits = 0
-                }, "Size Bytes (RAW):    {0:N} B", cfg.SizeRawBytes));
+            if(verboselevel >= 1) {
+                UpdateStatus(string.Format(new NumberFormatInfo {
+                                                                NumberGroupSeparator = " ", NumberDecimalDigits = 0
+                                                                }, "Size Bytes:          {0:N} B", cfg.SizeBytes));
+                UpdateStatus(string.Format(new NumberFormatInfo {
+                                                                NumberGroupSeparator = " ", NumberDecimalDigits = 0
+                                                                }, "Size Bytes (RAW):    {0:N} B", cfg.SizeRawBytes));
                 UpdateStatus(string.Format("Size Readable:       {0}", GetSizeReadable(cfg.SizeBytes)));
                 UpdateStatus(string.Format("Size Readable (RAW): {0}", GetSizeReadable(cfg.SizeBytes)));
             }
-            if (verboselevel >= 3)
-            {
+            if(verboselevel >= 3) {
                 UpdateStatus(string.Format("Controller Type:     {0}", cfg.ControllerType));
                 UpdateStatus(string.Format("Block Type:          {0}", cfg.BlockType));
             }
         }
-
     }
 }

@@ -10,6 +10,10 @@
 
         void UpdateProgress(uint current, uint max, uint total = 0);
 
+        void UpdateMMCProgress(long currentSector, long lastSector, int sectorSize, long bufsize);
+
+        void UpdateMMCProgressEX(long offset, long maximum, long bufsize);
+
         void UpdateStatus(string message);
 
         void SendError(string message);

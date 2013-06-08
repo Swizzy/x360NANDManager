@@ -6,51 +6,54 @@ namespace x360NANDManager.MMC {
     public sealed class MMCDevice : Utils, IDisposable {
         internal SafeFileHandle DeviceHandle;
 
-        internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometry geometry)
-        {
+        internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometry geometry) {
             DisplayName = displayName;
             Path = path;
             DiskGeometry = geometry;
         }
 
         /// <summary>
-        /// Returns true if there is a device lock in place (exclusive access)
+        ///   Returns true if there is a device lock in place (exclusive access)
         /// </summary>
         internal bool IsLocked { get; private set; }
 
         /// <summary>
-        /// Gets Disk Size based on DiskGeometry
+        ///   Gets Disk Size based on DiskGeometry
         /// </summary>
         public long Size {
-            get { return NativeWin32.TranslateGeometryToSize(DiskGeometry); }
+            //get { return NativeWin32.TranslateGeometryToSize(DiskGeometry); }
+            get {
+                DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Read, FileShare.None);
+                try {
+                    var geo = NativeWin32.GetGeometryEX(DeviceHandle);
+                    return (long) geo.DiskSize;
+                }
+                finally {
+                    DeviceHandle.Close();
+                }
+                //return NativeWin32.TranslateGeometryToSize(DiskGeometry); 
+            }
         }
 
         /// <summary>
-        /// Device Path
+        ///   Device Path
         /// </summary>
         public string Path { get; private set; }
 
         /// <summary>
-        /// Name to display to the end-user
+        ///   Name to display to the end-user
         /// </summary>
         public string DisplayName { get; internal set; }
 
         /// <summary>
-        /// Gets the disk Geometry for the current device
+        ///   Gets the disk Geometry for the current device
         /// </summary>
         public NativeWin32.DiskGeometry DiskGeometry { get; private set; }
 
-
-        ~MMCDevice() {
-            try {
-                Release();
-            }
-            catch {
-            }
-        }
+        #region IDisposable Members
 
         /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        ///   Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose() {
             GC.SuppressFinalize(this);
@@ -61,19 +64,29 @@ namespace x360NANDManager.MMC {
             }
         }
 
+        #endregion
+
+        ~MMCDevice() {
+            try {
+                Release();
+            }
+            catch {
+            }
+        }
+
         /// <summary>
-        /// Returns a string representation of this device (used for displaying in User controls)
+        ///   Returns a string representation of this device (used for displaying in User controls)
         /// </summary>
-        /// <returns>String representation of the device</returns>
+        /// <returns> String representation of the device </returns>
         public override string ToString() {
             return string.Format("{0} [ {1} ]", DisplayName, GetSizeReadable(Size));
         }
 
         /// <summary>
-        /// Open a handle for reading from the device (internal handle)
+        ///   Open a handle for reading from the device (internal handle)
         /// </summary>
         internal void OpenReadHandle() {
-            if (DeviceHandle != null && !DeviceHandle.IsInvalid)
+            if(DeviceHandle != null && !DeviceHandle.IsInvalid)
                 DeviceHandle.Close();
             if(!NativeWin32.LockDevice(Path))
                 throw new DeviceError(DeviceError.ErrorLevels.DeviceLockFailed);
@@ -82,10 +95,10 @@ namespace x360NANDManager.MMC {
         }
 
         /// <summary>
-        /// Open a handle for writing to the device (internal handle)
+        ///   Open a handle for writing to the device (internal handle)
         /// </summary>
         internal void OpenWriteHandle() {
-            if (DeviceHandle != null && !DeviceHandle.IsInvalid)
+            if(DeviceHandle != null && !DeviceHandle.IsInvalid)
                 Release();
             if(!NativeWin32.LockDevice(Path))
                 throw new DeviceError(DeviceError.ErrorLevels.DeviceLockFailed);
@@ -94,7 +107,7 @@ namespace x360NANDManager.MMC {
         }
 
         /// <summary>
-        /// Release the device
+        ///   Release the device
         /// </summary>
         internal void Release() {
             if(DeviceHandle != null && !DeviceHandle.IsInvalid)

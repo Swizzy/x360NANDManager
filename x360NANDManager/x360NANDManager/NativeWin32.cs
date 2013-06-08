@@ -88,6 +88,15 @@
 
         #endregion
 
+        [StructLayout(LayoutKind.Sequential)] internal struct DiskGeometryEX
+        {
+            internal DiskGeometry Geometry;
+            internal ulong DiskSize;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            internal byte[] Data;
+        }
+
         #region Nested type: SpClassinstallHeader
 
         [StructLayout(LayoutKind.Sequential)] internal struct SpClassinstallHeader {
@@ -179,8 +188,8 @@
 
         [DllImport("Kernel32.dll", SetLastError = true)] public static extern int CloseHandle(SafeFileHandle hObject);
 
-        [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = false)] internal static extern bool DeviceIoControl(SafeFileHandle hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
-
+        [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)] internal static extern bool DeviceIoControl(SafeFileHandle hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
+        
         #endregion Kernel32
 
         #region Functions
@@ -247,7 +256,7 @@
             return ret;
         }
 
-        internal static bool UnLockDevice(string device) {
+        internal static void UnLockDevice(string device) {
             Main.SendDebug(string.Format("Unlocking: {0}", device));
             var ret = false;
             var deviceNumber = GetDeviceNumber(device);
@@ -266,7 +275,7 @@
                     handle.Close();
                 }
             }
-            return ret;
+            return;
         }
 
         internal static string GetDevicePath(string device) {
@@ -361,14 +370,43 @@
                 throw new Win32Exception(6);
             var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometry)));
             try {
-                using(var deviceIoOverlapped = new DeviceIoOverlapped(new ManualResetEvent(false).SafeWaitHandle.DangerousGetHandle())) {
+                //using(var deviceIoOverlapped = new DeviceIoOverlapped(new ManualResetEvent(false).SafeWaitHandle.DangerousGetHandle())) {
                     int retSize;
-                    if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, deviceIoOverlapped.GlobalOverlapped))
+                    //if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, deviceIoOverlapped.GlobalOverlapped))
+                    if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, IntPtr.Zero))
                         throw new Win32Exception(Marshal.GetLastWin32Error());
                     return (DiskGeometry) Marshal.PtrToStructure(bufPtr, typeof(DiskGeometry));
-                }
+                //}
             }
             finally {
+                Marshal.FreeHGlobal(bufPtr);
+            }
+        }
+
+        internal static DiskGeometryEX GetGeometryEX(SafeFileHandle handle)
+        {
+            if (handle.IsInvalid)
+                throw new Win32Exception(6);
+            var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometryEX)));
+            try
+            {
+                //using(var deviceIoOverlapped = new DeviceIoOverlapped(new ManualResetEvent(false).SafeWaitHandle.DangerousGetHandle())) {
+                int retSize;
+                //if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, deviceIoOverlapped.GlobalOverlapped))
+                if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometryEX, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometryEX)), out retSize, IntPtr.Zero))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                var geo = (DiskGeometryEX)Marshal.PtrToStructure(bufPtr, typeof(DiskGeometryEX));
+                Main.SendDebug(string.Format("Cylinders: 0x{0:X}", geo.Geometry.Cylinders));
+                Main.SendDebug(string.Format("MediaType: 0x{0:X}", geo.Geometry.MediaType));
+                Main.SendDebug(string.Format("Tracks:    0x{0:X}", geo.Geometry.TracksPerCylinder));
+                Main.SendDebug(string.Format("Sectors:   0x{0:X}", geo.Geometry.SectorsPerTrack));
+                Main.SendDebug(string.Format("Bytes:     0x{0:X}", geo.Geometry.BytesPerSector));
+                Main.SendDebug(string.Format("DiskSize:  0x{0:X}", geo.DiskSize));
+                return geo;
+                //}
+            }
+            finally
+            {
                 Marshal.FreeHGlobal(bufPtr);
             }
         }
@@ -384,89 +422,89 @@
 
         #endregion Functions
 
-        #region Nested type: DeviceIoOverlapped
+        //#region Nested type: DeviceIoOverlapped
 
-        private sealed class DeviceIoOverlapped : IDisposable {
-            private readonly int _mFieldOffsetEventHandle;
-            private readonly int _mFieldOffsetInternalHigh;
-            private readonly int _mFieldOffsetInternalLow;
-            private readonly int _mFieldOffsetOffsetHigh;
-            private readonly int _mFieldOffsetOffsetLow;
-            private IntPtr _mPtrOverlapped = IntPtr.Zero;
+        //private sealed class DeviceIoOverlapped : IDisposable {
+        //    private readonly int _mFieldOffsetEventHandle;
+        //    private readonly int _mFieldOffsetInternalHigh;
+        //    private readonly int _mFieldOffsetInternalLow;
+        //    private readonly int _mFieldOffsetOffsetHigh;
+        //    private readonly int _mFieldOffsetOffsetLow;
+        //    private IntPtr _mPtrOverlapped = IntPtr.Zero;
 
-            public DeviceIoOverlapped(IntPtr hEventOverlapped = default(IntPtr)) {
-                _mPtrOverlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
-                _mFieldOffsetInternalLow = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalLow").ToInt32();
-                _mFieldOffsetInternalHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalHigh").ToInt32();
-                _mFieldOffsetOffsetLow = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetLow").ToInt32();
-                _mFieldOffsetOffsetHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetHigh").ToInt32();
-                _mFieldOffsetEventHandle = Marshal.OffsetOf(typeof(NativeOverlapped), "EventHandle").ToInt32();
-                if(hEventOverlapped != IntPtr.Zero)
-                    ClearAndSetEvent(hEventOverlapped);
-            }
+        //    public DeviceIoOverlapped(IntPtr hEventOverlapped = default(IntPtr)) {
+        //        _mPtrOverlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
+        //        _mFieldOffsetInternalLow = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalLow").ToInt32();
+        //        _mFieldOffsetInternalHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalHigh").ToInt32();
+        //        _mFieldOffsetOffsetLow = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetLow").ToInt32();
+        //        _mFieldOffsetOffsetHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetHigh").ToInt32();
+        //        _mFieldOffsetEventHandle = Marshal.OffsetOf(typeof(NativeOverlapped), "EventHandle").ToInt32();
+        //        if(hEventOverlapped != IntPtr.Zero)
+        //            ClearAndSetEvent(hEventOverlapped);
+        //    }
 
-            private IntPtr InternalLow {
-                set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalLow, value); }
-            }
+        //    private IntPtr InternalLow {
+        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalLow, value); }
+        //    }
 
-            private IntPtr InternalHigh {
-                set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalHigh, value); }
-            }
+        //    private IntPtr InternalHigh {
+        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalHigh, value); }
+        //    }
 
-            private int OffsetLow {
-                set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetLow, value); }
-            }
+        //    private int OffsetLow {
+        //        set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetLow, value); }
+        //    }
 
-            private int OffsetHigh {
-                set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetHigh, value); }
-            }
+        //    private int OffsetHigh {
+        //        set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetHigh, value); }
+        //    }
 
-            /// <summary>
-            ///   The overlapped event wait handle.
-            /// </summary>
-            private IntPtr EventHandle {
-                set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetEventHandle, value); }
-            }
+        //    /// <summary>
+        //    ///   The overlapped event wait handle.
+        //    /// </summary>
+        //    private IntPtr EventHandle {
+        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetEventHandle, value); }
+        //    }
 
-            /// <summary>
-            ///   Pass this into the DeviceIoControl and GetOverlappedResult APIs
-            /// </summary>
-            public IntPtr GlobalOverlapped {
-                get { return _mPtrOverlapped; }
-            }
+        //    /// <summary>
+        //    ///   Pass this into the DeviceIoControl and GetOverlappedResult APIs
+        //    /// </summary>
+        //    public IntPtr GlobalOverlapped {
+        //        get { return _mPtrOverlapped; }
+        //    }
 
-            #region IDisposable Members
+        //    #region IDisposable Members
 
-            public void Dispose() {
-                GC.SuppressFinalize(this);
-                if(_mPtrOverlapped == IntPtr.Zero)
-                    return;
-                Marshal.FreeHGlobal(_mPtrOverlapped);
-                _mPtrOverlapped = IntPtr.Zero;
-            }
+        //    public void Dispose() {
+        //        GC.SuppressFinalize(this);
+        //        if(_mPtrOverlapped == IntPtr.Zero)
+        //            return;
+        //        Marshal.FreeHGlobal(_mPtrOverlapped);
+        //        _mPtrOverlapped = IntPtr.Zero;
+        //    }
 
-            #endregion
+        //    #endregion IDisposable Members
 
-            /// <summary>
-            ///   Set the overlapped wait handle and clear out the rest of the structure.
-            /// </summary>
-            /// <param name="hEventOverlapped"> </param>
-            public void ClearAndSetEvent(IntPtr hEventOverlapped) {
-                EventHandle = hEventOverlapped;
-                InternalLow = IntPtr.Zero;
-                InternalHigh = IntPtr.Zero;
-                OffsetLow = 0;
-                OffsetHigh = 0;
-            }
+        //    /// <summary>
+        //    ///   Set the overlapped wait handle and clear out the rest of the structure.
+        //    /// </summary>
+        //    /// <param name="hEventOverlapped"> </param>
+        //    public void ClearAndSetEvent(IntPtr hEventOverlapped) {
+        //        EventHandle = hEventOverlapped;
+        //        InternalLow = IntPtr.Zero;
+        //        InternalHigh = IntPtr.Zero;
+        //        OffsetLow = 0;
+        //        OffsetHigh = 0;
+        //    }
 
-            ~DeviceIoOverlapped() {
-                if(_mPtrOverlapped == IntPtr.Zero)
-                    return;
-                Marshal.FreeHGlobal(_mPtrOverlapped);
-                _mPtrOverlapped = IntPtr.Zero;
-            }
-        }
+        //    ~DeviceIoOverlapped() {
+        //        if(_mPtrOverlapped == IntPtr.Zero)
+        //            return;
+        //        Marshal.FreeHGlobal(_mPtrOverlapped);
+        //        _mPtrOverlapped = IntPtr.Zero;
+        //    }
+        //}
 
-        #endregion
+        //#endregion Nested type: DeviceIoOverlapped
     }
 }

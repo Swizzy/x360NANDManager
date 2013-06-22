@@ -169,7 +169,7 @@
                                                                 NumberGroupSeparator = " ", NumberDecimalDigits = 0
                                                                 }, "Size Bytes (RAW):    {0:N} B", cfg.SizeRawBytes));
                 UpdateStatus(string.Format("Size Readable:       {0}", GetSizeReadable(cfg.SizeBytes)));
-                UpdateStatus(string.Format("Size Readable (RAW): {0}", GetSizeReadable(cfg.SizeBytes)));
+                UpdateStatus(string.Format("Size Readable (RAW): {0}", GetSizeReadable(cfg.SizeRawBytes)));
             }
             if(verboselevel >= 3) {
                 UpdateStatus(string.Format("Controller Type:     {0}", cfg.ControllerType));

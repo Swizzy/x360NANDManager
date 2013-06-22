@@ -9,7 +9,7 @@
 
         void Release();
 
-        void Reset();
+        void Reset(bool initNANDFlash = true);
 
         void Abort();
 

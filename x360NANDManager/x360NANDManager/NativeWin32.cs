@@ -3,7 +3,6 @@
     using System.ComponentModel;
     using System.IO;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using Microsoft.Win32.SafeHandles;
 
     public class NativeWin32 {
@@ -19,7 +18,7 @@
             DIGCFDeviceinterface = 0x00000010,
         }
 
-        #endregion
+        #endregion Nested type: DIGCF
 
         #region Nested type: IOCTL
 
@@ -34,36 +33,6 @@
 
         #endregion
 
-        public enum MediaType : uint
-        {
-            Unknown,
-            F51Pt2512,
-            F31Pt44512,
-            F32Pt88512,
-            F320Pt8512,
-            F3720512,
-            F5360512,
-            F5320512,
-            F53201024,
-            F5180512,
-            F5160512,
-            RemovableMedia,
-            FixedMedia,
-            F3120M512,
-            F3640512,
-            F5640512,
-            F5720512,
-            F31Pt2512,
-            F31Pt231024,
-            F51Pt231024,
-            F3128Mb512,
-            F3230Mb512,
-            F8256128,
-            F3200Mb512,
-            F3240M512,
-            F332M512
-        }
-
         #endregion Enums
 
         #region Structs
@@ -71,31 +40,26 @@
         #region Nested type: DiskGeometry
 
         [StructLayout(LayoutKind.Sequential)] public struct DiskGeometry {
-            public long Cylinders;
-            public MediaType MediaType;
-            public uint TracksPerCylinder;
-            public uint SectorsPerTrack;
-            public uint BytesPerSector;
-
-            public long DiskSize
-            {
-                get
-                {
-                    return Cylinders * TracksPerCylinder * SectorsPerTrack * BytesPerSector;
-                }
-            }
+            public readonly long Cylinders;
+            public readonly uint MediaType;
+            public readonly uint TracksPerCylinder;
+            public readonly uint SectorsPerTrack;
+            public readonly uint BytesPerSector;
         }
 
         #endregion
 
-        [StructLayout(LayoutKind.Sequential)] internal struct DiskGeometryEX
-        {
-            internal DiskGeometry Geometry;
-            internal ulong DiskSize;
+        #region Nested type: DiskGeometryEX
+
+        [StructLayout(LayoutKind.Sequential)] public struct DiskGeometryEX {
+            public readonly DiskGeometry Geometry;
+            public readonly  ulong DiskSize;
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            internal byte[] Data;
+            public readonly byte[] Data;
         }
+
+        #endregion
 
         #region Nested type: SpClassinstallHeader
 
@@ -109,10 +73,10 @@
         #region Nested type: SpDeviceInterfaceData
 
         [StructLayout(LayoutKind.Sequential)] internal struct SpDeviceInterfaceData {
-            public UInt32 cbSize;
-            public Guid InterfaceClassGuid;
-            public UInt32 Flags;
-            public UIntPtr Reserved;
+            internal UInt32 cbSize;
+            internal Guid InterfaceClassGuid;
+            internal UInt32 Flags;
+            internal UIntPtr Reserved;
         }
 
         #endregion
@@ -120,8 +84,8 @@
         #region Nested type: SpDeviceInterfaceDetailData
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)] internal struct SpDeviceInterfaceDetailData {
-            public UInt32 cbSize;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string DevicePath;
+            internal UInt32 cbSize;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] internal string DevicePath;
         }
 
         #endregion
@@ -129,10 +93,10 @@
         #region Nested type: SpDevinfoData
 
         [StructLayout(LayoutKind.Sequential)] internal struct SpDevinfoData {
-            public UInt32 cbSize;
-            public Guid ClassGuid;
-            public UInt32 DevInst;
-            public IntPtr Reserved;
+            internal UInt32 cbSize;
+            internal Guid ClassGuid;
+            internal UInt32 DevInst;
+            internal IntPtr Reserved;
         }
 
         #endregion
@@ -153,7 +117,7 @@
         [StructLayout(LayoutKind.Sequential)] private struct StorageDeviceNumber {
             internal readonly int deviceType;
             internal readonly int deviceNumber;
-            private readonly int partitionNumber;
+            internal readonly int partitionNumber;
         }
 
         #endregion
@@ -189,7 +153,7 @@
         [DllImport("Kernel32.dll", SetLastError = true)] public static extern int CloseHandle(SafeFileHandle hObject);
 
         [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)] internal static extern bool DeviceIoControl(SafeFileHandle hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
-        
+
         #endregion Kernel32
 
         #region Functions
@@ -258,7 +222,6 @@
 
         internal static void UnLockDevice(string device) {
             Main.SendDebug(string.Format("Unlocking: {0}", device));
-            var ret = false;
             var deviceNumber = GetDeviceNumber(device);
             foreach(var drive in DriveInfo.GetDrives()) {
                 var num = GetDeviceNumber(drive.Name.Substring(0, 2));
@@ -269,13 +232,12 @@
                     int outsize;
                     if(!DeviceIoControl(handle, (int) IOCTL.UnlockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero))
                         throw new Win32Exception(Marshal.GetLastWin32Error());
-                    ret = true;
+                    return;
                 }
                 finally {
                     handle.Close();
                 }
             }
-            return;
         }
 
         internal static string GetDevicePath(string device) {
@@ -354,157 +316,65 @@
             }
         }
 
-        internal static DiskGeometry GetGeometry(string rawaddr) {
+        //internal static DiskGeometry GetGeometry(string rawaddr) {
+        //    var handle = GetFileHandleRaw(rawaddr);
+        //    try {
+        //        var ret = GetGeometry(handle);
+        //        return ret;
+        //    }
+        //    finally {
+        //        handle.Close();
+        //    }
+        //}
+
+        //internal static DiskGeometry GetGeometry(SafeFileHandle handle) {
+        //    if(handle.IsInvalid)
+        //        throw new Win32Exception(6);
+        //    var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometry)));
+        //    try {
+        //            int retSize;
+        //            if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, IntPtr.Zero))
+        //                throw new Win32Exception(Marshal.GetLastWin32Error());
+        //            return (DiskGeometry) Marshal.PtrToStructure(bufPtr, typeof(DiskGeometry));
+        //    }
+        //    finally {
+        //        Marshal.FreeHGlobal(bufPtr);
+        //    }
+        //}
+
+        internal static DiskGeometryEX GetGeometryEX(string rawaddr) {
             var handle = GetFileHandleRaw(rawaddr);
             try {
-                var ret = GetGeometry(handle);
-                return ret;
+                return GetGeometryEX(handle);
             }
             finally {
                 handle.Close();
             }
         }
 
-        internal static DiskGeometry GetGeometry(SafeFileHandle handle) {
+        internal static DiskGeometryEX GetGeometryEX(SafeFileHandle handle) {
             if(handle.IsInvalid)
                 throw new Win32Exception(6);
-            var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometry)));
+            var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometryEX)));
             try {
-                //using(var deviceIoOverlapped = new DeviceIoOverlapped(new ManualResetEvent(false).SafeWaitHandle.DangerousGetHandle())) {
-                    int retSize;
-                    //if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, deviceIoOverlapped.GlobalOverlapped))
-                    if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, IntPtr.Zero))
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
-                    return (DiskGeometry) Marshal.PtrToStructure(bufPtr, typeof(DiskGeometry));
-                //}
+                int retSize;
+                if(!DeviceIoControl(handle, (int) IOCTL.DiskGetGeometryEX, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometryEX)), out retSize, IntPtr.Zero))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                var geo = (DiskGeometryEX) Marshal.PtrToStructure(bufPtr, typeof(DiskGeometryEX));
+                Main.SendDebug(string.Format("MediaType:     0x{0:X}", geo.Geometry.MediaType));
+                Main.SendDebug(string.Format("Cylinders:     0x{0:X}", geo.Geometry.Cylinders));
+                Main.SendDebug(string.Format("Tracks:        0x{0:X}", geo.Geometry.TracksPerCylinder));
+                Main.SendDebug(string.Format("Sectors:       0x{0:X}", geo.Geometry.SectorsPerTrack));
+                Main.SendDebug(string.Format("Bytes:         0x{0:X}", geo.Geometry.BytesPerSector));
+                Main.SendDebug(string.Format("DiskSize:      0x{0:X}", geo.DiskSize));
+                Main.SendDebug(string.Format("Total Sectors: 0x{0:X}", geo.DiskSize / geo.Geometry.BytesPerSector));
+                return geo;
             }
             finally {
                 Marshal.FreeHGlobal(bufPtr);
             }
         }
 
-        internal static DiskGeometryEX GetGeometryEX(SafeFileHandle handle)
-        {
-            if (handle.IsInvalid)
-                throw new Win32Exception(6);
-            var bufPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DiskGeometryEX)));
-            try
-            {
-                //using(var deviceIoOverlapped = new DeviceIoOverlapped(new ManualResetEvent(false).SafeWaitHandle.DangerousGetHandle())) {
-                int retSize;
-                //if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometry, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometry)), out retSize, deviceIoOverlapped.GlobalOverlapped))
-                if (!DeviceIoControl(handle, (int)IOCTL.DiskGetGeometryEX, IntPtr.Zero, 0, bufPtr, Marshal.SizeOf(typeof(DiskGeometryEX)), out retSize, IntPtr.Zero))
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
-                var geo = (DiskGeometryEX)Marshal.PtrToStructure(bufPtr, typeof(DiskGeometryEX));
-                Main.SendDebug(string.Format("Cylinders: 0x{0:X}", geo.Geometry.Cylinders));
-                Main.SendDebug(string.Format("MediaType: 0x{0:X}", geo.Geometry.MediaType));
-                Main.SendDebug(string.Format("Tracks:    0x{0:X}", geo.Geometry.TracksPerCylinder));
-                Main.SendDebug(string.Format("Sectors:   0x{0:X}", geo.Geometry.SectorsPerTrack));
-                Main.SendDebug(string.Format("Bytes:     0x{0:X}", geo.Geometry.BytesPerSector));
-                Main.SendDebug(string.Format("DiskSize:  0x{0:X}", geo.DiskSize));
-                return geo;
-                //}
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(bufPtr);
-            }
-        }
-
-        internal static long TranslateGeometryToSize(DiskGeometry gem) {
-            Main.SendDebug(string.Format("Cylinders: {0}", gem.Cylinders));
-            Main.SendDebug(string.Format("Tracks: {0}", gem.TracksPerCylinder));
-            Main.SendDebug(string.Format("Sectors: {0}", gem.SectorsPerTrack));
-            Main.SendDebug(string.Format("Bytes: {0}", gem.BytesPerSector));
-            Main.SendDebug(string.Format("DiskSize: {0}", gem.DiskSize));
-            return gem.DiskSize;
-        }
-
         #endregion Functions
-
-        //#region Nested type: DeviceIoOverlapped
-
-        //private sealed class DeviceIoOverlapped : IDisposable {
-        //    private readonly int _mFieldOffsetEventHandle;
-        //    private readonly int _mFieldOffsetInternalHigh;
-        //    private readonly int _mFieldOffsetInternalLow;
-        //    private readonly int _mFieldOffsetOffsetHigh;
-        //    private readonly int _mFieldOffsetOffsetLow;
-        //    private IntPtr _mPtrOverlapped = IntPtr.Zero;
-
-        //    public DeviceIoOverlapped(IntPtr hEventOverlapped = default(IntPtr)) {
-        //        _mPtrOverlapped = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(NativeOverlapped)));
-        //        _mFieldOffsetInternalLow = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalLow").ToInt32();
-        //        _mFieldOffsetInternalHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "InternalHigh").ToInt32();
-        //        _mFieldOffsetOffsetLow = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetLow").ToInt32();
-        //        _mFieldOffsetOffsetHigh = Marshal.OffsetOf(typeof(NativeOverlapped), "OffsetHigh").ToInt32();
-        //        _mFieldOffsetEventHandle = Marshal.OffsetOf(typeof(NativeOverlapped), "EventHandle").ToInt32();
-        //        if(hEventOverlapped != IntPtr.Zero)
-        //            ClearAndSetEvent(hEventOverlapped);
-        //    }
-
-        //    private IntPtr InternalLow {
-        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalLow, value); }
-        //    }
-
-        //    private IntPtr InternalHigh {
-        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetInternalHigh, value); }
-        //    }
-
-        //    private int OffsetLow {
-        //        set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetLow, value); }
-        //    }
-
-        //    private int OffsetHigh {
-        //        set { Marshal.WriteInt32(_mPtrOverlapped, _mFieldOffsetOffsetHigh, value); }
-        //    }
-
-        //    /// <summary>
-        //    ///   The overlapped event wait handle.
-        //    /// </summary>
-        //    private IntPtr EventHandle {
-        //        set { Marshal.WriteIntPtr(_mPtrOverlapped, _mFieldOffsetEventHandle, value); }
-        //    }
-
-        //    /// <summary>
-        //    ///   Pass this into the DeviceIoControl and GetOverlappedResult APIs
-        //    /// </summary>
-        //    public IntPtr GlobalOverlapped {
-        //        get { return _mPtrOverlapped; }
-        //    }
-
-        //    #region IDisposable Members
-
-        //    public void Dispose() {
-        //        GC.SuppressFinalize(this);
-        //        if(_mPtrOverlapped == IntPtr.Zero)
-        //            return;
-        //        Marshal.FreeHGlobal(_mPtrOverlapped);
-        //        _mPtrOverlapped = IntPtr.Zero;
-        //    }
-
-        //    #endregion IDisposable Members
-
-        //    /// <summary>
-        //    ///   Set the overlapped wait handle and clear out the rest of the structure.
-        //    /// </summary>
-        //    /// <param name="hEventOverlapped"> </param>
-        //    public void ClearAndSetEvent(IntPtr hEventOverlapped) {
-        //        EventHandle = hEventOverlapped;
-        //        InternalLow = IntPtr.Zero;
-        //        InternalHigh = IntPtr.Zero;
-        //        OffsetLow = 0;
-        //        OffsetHigh = 0;
-        //    }
-
-        //    ~DeviceIoOverlapped() {
-        //        if(_mPtrOverlapped == IntPtr.Zero)
-        //            return;
-        //        Marshal.FreeHGlobal(_mPtrOverlapped);
-        //        _mPtrOverlapped = IntPtr.Zero;
-        //    }
-        //}
-
-        //#endregion Nested type: DeviceIoOverlapped
     }
 }

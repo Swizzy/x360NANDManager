@@ -6,10 +6,10 @@ namespace x360NANDManager.MMC {
     public sealed class MMCDevice : Utils, IDisposable {
         internal SafeFileHandle DeviceHandle;
 
-        internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometry geometry) {
+        internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometryEX geometry) {
             DisplayName = displayName;
             Path = path;
-            DiskGeometry = geometry;
+            DiskGeometryEX = geometry;
         }
 
         /// <summary>
@@ -21,17 +21,8 @@ namespace x360NANDManager.MMC {
         ///   Gets Disk Size based on DiskGeometry
         /// </summary>
         public long Size {
-            //get { return NativeWin32.TranslateGeometryToSize(DiskGeometry); }
             get {
-                DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Read, FileShare.None);
-                try {
-                    var geo = NativeWin32.GetGeometryEX(DeviceHandle);
-                    return (long) geo.DiskSize;
-                }
-                finally {
-                    DeviceHandle.Close();
-                }
-                //return NativeWin32.TranslateGeometryToSize(DiskGeometry); 
+                return (long) DiskGeometryEX.DiskSize;
             }
         }
 
@@ -48,7 +39,7 @@ namespace x360NANDManager.MMC {
         /// <summary>
         ///   Gets the disk Geometry for the current device
         /// </summary>
-        public NativeWin32.DiskGeometry DiskGeometry { get; private set; }
+        public NativeWin32.DiskGeometryEX DiskGeometryEX { get; private set; }
 
         #region IDisposable Members
 

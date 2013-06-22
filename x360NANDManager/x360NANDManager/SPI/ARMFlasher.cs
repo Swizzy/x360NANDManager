@@ -265,12 +265,14 @@
         ///   Cycle device between operations
         ///   <exception cref="DeviceError">If there is any problem with the device or the reset fails</exception>
         /// </summary>
-        public void Reset() {
+        public void Reset(bool initNANDFlash = true) {
             DeInit();
             Release();
             UpdateStatus(string.Format("Device Successfully reset!{0}Waiting 1 second for device to be found by windows...", Environment.NewLine));
             Thread.Sleep(1000);
             if(DeviceInit(_vendorID, _productID)) {
+                if (!initNANDFlash)
+                    return;
                 XConfig tmp;
                 Init(out tmp);
                 if(_xcfg.Config == tmp.Config)
@@ -488,7 +490,7 @@
                     }
                     UpdateProgress(block + totalBlocks - lastBlock, lastBlock, totalBlocks);
                     var tmp = ReadBlock(block, verboseLevel);
-                    if(!CompareByteArrays(tmp, writtenData, offset))
+                    if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }
@@ -614,7 +616,7 @@
                     }
                     UpdateProgress(block + totalBlocks - lastBlock, lastBlock, totalBlocks);
                     var tmp = ReadBlock(block, verboseLevel);
-                    if(!CompareByteArrays(tmp, writtenData, offset))
+                    if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }

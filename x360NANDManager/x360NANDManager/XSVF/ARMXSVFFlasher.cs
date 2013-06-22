@@ -2,6 +2,7 @@ namespace x360NANDManager.XSVF {
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Threading;
     using LibUsbDotNet.Main;
     using x360NANDManager.SPI;
 
@@ -12,9 +13,9 @@ namespace x360NANDManager.XSVF {
         /// <summary>
         /// Initalize XSVF Mode
         /// </summary>
-        private void InitXSVF() {
+        private void InitXSVFMode() {
             CheckDeviceState();
-            Reset();
+            GetARMVersion();
             GetARMVersion();
         }
 
@@ -44,7 +45,6 @@ namespace x360NANDManager.XSVF {
             }
             UpdateStatus(string.Format("Compressed to 0x{0:X} Bytes OK", ret.Count));
             return ret.ToArray();
-            ;
         }
 
         /// <summary>
@@ -64,6 +64,8 @@ namespace x360NANDManager.XSVF {
         /// </summary>
         private void ExecuteXSVF() {
             SendCMD(Commands.XSVFExec);
+            Thread.Sleep(2000);
+            SendCMD(Commands.DataStatus, 0, 0x4);
         }
 
         /// <summary>
@@ -71,6 +73,7 @@ namespace x360NANDManager.XSVF {
         /// </summary>
         /// <returns>True if ARM is version 3 or higher</returns>
         internal bool IsCompatibleVersion() {
+            GetARMVersion();
             return ArmVersion >= 3;
         }
 
@@ -85,8 +88,9 @@ namespace x360NANDManager.XSVF {
                 throw new ArgumentNullException(file);
             if(!File.Exists(file))
                 throw new FileNotFoundException(string.Format("{0} Don't exist!", file));
-            InitXSVF();
+            InitXSVFMode();
             var data = CompressXSVF(file);
+            SendCMD(Commands.DataWrite, 0, (uint)data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.None)
                 throw new DeviceError(DeviceError.ErrorLevels.USBError, err);
@@ -102,8 +106,9 @@ namespace x360NANDManager.XSVF {
         public void WriteXSVF(byte[] data) {
             if (data == null)
                 throw new ArgumentNullException("data");
-            InitXSVF();
+            InitXSVFMode();
             data = CompressXSVF(data);
+            SendCMD(Commands.DataWrite, 0, (uint)data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.None)
                 throw new DeviceError(DeviceError.ErrorLevels.USBError, err);

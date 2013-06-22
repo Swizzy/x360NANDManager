@@ -392,19 +392,15 @@
         {
             if(mmcdevice.SelectedIndex > mmcdevice.Items.Count)
                 return;
-            var tmp = mmcdevice.Items[mmcdevice.SelectedIndex] as x360NANDManager.MMC.MMCDevice;
+            var tmp = mmcdevice.Items[mmcdevice.SelectedIndex] as MMCDevice;
             if (tmp == null) {
                 mmccountbox.Maximum = 0;
                 mmcoffsetbox.Maximum = 0;
-                mmccountbox.Increment = 1;
-                mmcoffsetbox.Increment = 1;
             }
             else
             {
-                mmccountbox.Maximum = tmp.Size;
-                mmcoffsetbox.Maximum = tmp.Size - 1;
-                mmccountbox.Increment = tmp.DiskGeometry.BytesPerSector;
-                mmcoffsetbox.Increment = tmp.DiskGeometry.BytesPerSector;
+                mmccountbox.Maximum = tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector;
+                mmcoffsetbox.Maximum = (tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector) - 1;
             }
         }
     }

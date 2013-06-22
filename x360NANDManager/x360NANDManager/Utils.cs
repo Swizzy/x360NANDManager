@@ -35,42 +35,55 @@
             return newlist.ToArray();
         }
 
-        //public bool CompareByteArrays(byte[] a1, byte[] a2) {
-        //    if(a1 == a2)
-        //        return true;
-        //    if(a1 == null || a2 == null || a1.Length != a2.Length)
-        //        return false;
-        //    for(var i = 0; i < a1.Length; i++) {
-        //        if(a1[i] != a2[i])
-        //            return false;
-        //    }
-        //    return true;
-        //}
-
-        internal static bool CompareByteArrays(byte[] buf, byte[] megabuf, int offset) {
-            if(buf == megabuf)
+        public bool CompareByteArrays(byte[] buf, byte[] buf2)
+        {
+            if (buf == buf2)
                 return true;
-            if(buf == null || megabuf == null || buf.Length > megabuf.Length - offset)
+            if (buf == null || buf2 == null || buf.Length != buf2.Length)
                 return false;
-            for(var i = 0; i < buf.Length; i++) {
-                if(buf[i] != megabuf[offset + i])
+            for (var i = 0; i < buf.Length; i++)
+            {
+                if (buf[i] != buf2[i])
                     return false;
             }
             return true;
         }
 
-        public long GetTotalFreeSpace(string path) {
+        internal static bool CompareByteArrays(ref byte[] buf, ref byte[] largebuf, int offset) {
+            if(buf == largebuf)
+                return true;
+            if(buf == null || largebuf == null || buf.Length > largebuf.Length - offset)
+                return false;
+            for(var i = 0; i < buf.Length; i++) {
+                if(buf[i] != largebuf[offset + i])
+                    return false;
+            }
+            return true;
+        }
+
+        protected static long GetTotalFreeSpace(string path) {
             foreach(var drive in DriveInfo.GetDrives()) {
-                if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
+                if(!drive.IsReady || !drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
+                    continue;
+                if((drive.TotalFreeSpace < 0xFFFFFFFE || FileSystemHas4GBSupport(drive.Name)) || (drive.TotalFreeSpace < 0x7FFFFFFE || FileSystemHas2GBSupport(drive.Name)))
                     return drive.TotalFreeSpace;
+                return FileSystemHas2GBSupport(drive.Name) ? 0xFFFFFFFE /* 4GB - 1 Byte */ : 0x7FFFFFFE; // 2GB - 1 Byte
             }
             throw new DirectoryNotFoundException();
         }
 
-        public bool FileSystemHas4GBSupport(string path) {
+        private static bool FileSystemHas4GBSupport(string path) {
             foreach(var drive in DriveInfo.GetDrives()) {
                 if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     return !drive.DriveFormat.StartsWith("FAT", StringComparison.CurrentCultureIgnoreCase);
+            }
+            throw new DirectoryNotFoundException();
+        }
+
+        private static bool FileSystemHas2GBSupport(string path) {
+            foreach(var drive in DriveInfo.GetDrives()) {
+                if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
+                    return !drive.DriveFormat.Equals("FAT", StringComparison.CurrentCultureIgnoreCase);
             }
             throw new DirectoryNotFoundException();
         }
@@ -80,7 +93,7 @@
                 return new BinaryReader(File.Open(file, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read));
             }
             catch(Exception) {
-                if(MessageBox.Show(string.Format(Resources.OpenReadFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error) == DialogResult.Yes)
+                if (MessageBox.Show(string.Format(Resources.OpenReadFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
                     return OpenReader(file);
             }
             return null;
@@ -91,7 +104,7 @@
                 return new BinaryWriter(File.Open(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None));
             }
             catch(Exception) {
-                if(MessageBox.Show(string.Format(Resources.OpenWriteFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error) == DialogResult.Yes)
+                if (MessageBox.Show(string.Format(Resources.OpenWriteFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
                     return OpenWriter(file);
             }
             return null;

@@ -70,7 +70,7 @@ namespace x360NANDManager.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to open {1}{0}{1} for read (This ussually means it&apos;s open in a different program){1}{1}Do you want to try again?.
+        ///   Looks up a localized string similar to Unable to open {1}{0}{1} for read (This ussually means it&apos;s open in a different program) Close whatever program is currently using the file and click Retry to try again.
         /// </summary>
         internal static string OpenReadFailed {
             get {
@@ -79,7 +79,7 @@ namespace x360NANDManager.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to open {1}{0}{1} for write (This ussually means it&apos;s open in a different program){1}{1}Do you want to try again?.
+        ///   Looks up a localized string similar to Unable to open {1}{0}{1} for write (This ussually means it&apos;s open in a different program) Close whatever program is currently using the file and click Retry to try again.
         /// </summary>
         internal static string OpenWriteFailed {
             get {

@@ -502,6 +502,8 @@ namespace x360NANDManager.MMC {
         internal static IList<MMCDevice> GetDevices(bool onlyRemoveable = true) {
             var tmp = new Dictionary<int, MMCDevice>();
             foreach(var drive in DriveInfo.GetDrives()) {
+                if (!drive.IsReady)
+                    continue;
                 if(drive.DriveType == DriveType.Fixed && onlyRemoveable)
                     continue;
                 if(drive.DriveType != DriveType.Removable && drive.DriveType != DriveType.Fixed)

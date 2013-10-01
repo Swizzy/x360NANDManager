@@ -3,20 +3,16 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Reflection;
-    using System.Security.Permissions;
-    using System.Security.Principal;
+    using System.Runtime.InteropServices;
     using x360NANDManager.MMC;
     using x360NANDManager.SPI;
     using x360NANDManager.XSVF;
 
     public static class Main {
+        [DllImport("shell32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] internal static extern bool IsUserAnAdmin();
+
         private const string BaseName = "x360NANDManager v{0}.{1} (Build: {2}) {3}";
         private static readonly Version Ver = Assembly.GetExecutingAssembly().GetName().Version;
-
-        static Main() {
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomainAssemblyResolve;
-            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
-        }
 
         public static string Version {
             get {
@@ -37,12 +33,12 @@
                 return new ARMFlasher(0xFFFF, 0x4);
             if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
                 return new ARMFlasher(0x11D4, 0x8338);
-            throw new DeviceError(DeviceError.ErrorLevels.NoDeviceFound);
+            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         public static ISPIFlasher GetSPIFlasher(int vendorID, int productID) {
             if(!NativeWin32.IsDeviceConnected(vendorID, productID))
-                throw new DeviceError(DeviceError.ErrorLevels.NoDeviceFound);
+                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
             return new ARMFlasher(vendorID, productID);
         }
 
@@ -50,50 +46,38 @@
             if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4)) {
                 var flasher = new ARMXSVFFlasher(0xFFFF, 0x4);
                 if(!flasher.IsCompatibleVersion())
-                    throw new DeviceError(DeviceError.ErrorLevels.IncompatibleDevice);
+                    throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.IncompatibleDevice);
                 return flasher;
             }
             if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
                 return new JRPXSVFFlasher(0x11D4, 0x8338);
-            throw new DeviceError(DeviceError.ErrorLevels.NoDeviceFound);
+            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         public static IXSVFFlasher GetXSVFFlasher(int vendorID, int productID) {
             if(NativeWin32.IsDeviceConnected(vendorID, productID))
                 return new ARMXSVFFlasher(vendorID, productID);
-            throw new DeviceError(DeviceError.ErrorLevels.NoDeviceFound);
+            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
-        [PrincipalPermissionAttribute(SecurityAction.Demand, Role = @"BUILTIN\Administrators")]
         public static IMMCFlasher GetMMCFlasher(MMCDevice device) {
+            if(!IsUserAnAdmin())
+                throw new Exception("You must be admin to use this function...");
             return new MMCFlasher(device);
         }
 
-        [PrincipalPermissionAttribute(SecurityAction.Demand, Role = @"BUILTIN\Administrators")]
         public static IList<MMCDevice> GetMMCDeviceList(bool onlyRemoveable = true) {
+            if (!IsUserAnAdmin())
+                throw new Exception("You must be admin to use this function...");
             return MMCFlasher.GetDevices(onlyRemoveable);
         }
 
         public static event EventHandler<EventArg<string>> Debug;
 
-        [Conditional("DEBUG")] [Conditional("ALPHA")] internal static void SendDebug(string message) {
+        [Conditional("DEBUG")] internal static void SendDebug(string message) {
             var dbg = Debug;
             if(dbg != null && message != null)
                 dbg(null, new EventArg<string>(message));
-        }
-
-        private static Assembly CurrentDomainAssemblyResolve(object sender, ResolveEventArgs args) {
-            if(string.IsNullOrEmpty(args.Name))
-                throw new Exception("DLL Read Failure (Nothing to load!)");
-            var name = string.Format("{0}.dll", args.Name.Split(',')[0]);
-            using(var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("{0}.{1}", typeof(Main).Namespace, name))) {
-                if(stream != null) {
-                    var data = new byte[stream.Length];
-                    stream.Read(data, 0, data.Length);
-                    return Assembly.Load(data);
-                }
-                throw new Exception(string.Format("Can't find external nor internal {0}!", name));
-            }
         }
     }
 
@@ -105,6 +89,8 @@
             SystemOnlyEX,
             MUOnly,
             MUOnlyEX,
+            XeLL,
+            XeLLEX,
             Full
         }
 
@@ -144,6 +130,14 @@
                 case MMCPresets.Full:
                     Start = 0;
                     End = 0;
+                    break;
+                case MMCPresets.XeLL:
+                    Start = 0;
+                    End = 0xA00;
+                    break;
+                case MMCPresets.XeLLEX:
+                    Start = 0;
+                    End = 0x140000;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("mmc");

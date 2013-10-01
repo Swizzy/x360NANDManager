@@ -5,7 +5,7 @@
     using System.Runtime.InteropServices;
     using LibUsbDotNet.Main;
 
-    public sealed class DeviceError : Exception {
+    public sealed class x360NANDManagerException : Exception {
         #region ErrorLevels enum
 
         /// <summary>
@@ -81,7 +81,7 @@
         /// <param name="errorLevel"> Error level within the app (If Win32Error we'll get it from the system using Marshal.GetLastWin32Error()) </param>
         /// <param name="usberror"> USB error by LibUSBDotNET (only for LibUSBDotNET errors) </param>
         /// <param name="message"> Message to send to the user </param>
-        internal DeviceError(ErrorLevels errorLevel, ErrorCode usberror = ErrorCode.None, string message = "") {
+        internal x360NANDManagerException(ErrorLevels errorLevel, ErrorCode usberror = ErrorCode.None, string message = "") {
             Message = message;
             ErrorLevel = errorLevel;
             switch(errorLevel) {

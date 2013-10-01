@@ -6,8 +6,6 @@
     {
         void Release();
 
-        void Reset(bool read = true);
-
         void Abort();
 
         void ZeroData(long startSector = 0, long sectorCount = 0);

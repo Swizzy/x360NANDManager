@@ -2,6 +2,18 @@
     using System;
     using System.IO;
 
+    public sealed class XConfigException : Exception {
+        public readonly uint Config;
+
+        internal XConfigException(uint config) {
+            Config = config;
+        }
+
+        public override string ToString() {
+            return string.Format("Unsupported Controller Type & Block Type Combination: 0x{0:X8}", Config);
+        }
+    }
+
     public sealed class XConfig {
         internal XConfig(uint config) {
             if(config == 0)
@@ -15,7 +27,7 @@
                 case 0: // Small block original SFC (pre jasper)
                     switch(BlockType) {
                         case 0: // Unsupported 8MB?
-                            throw new Exception("Unsupported Controller Type & Block Type Combination");
+                            throw new XConfigException(config);
                         case 1: // 16MB
                             SizeBlocks = 0x400;
                             FSBlocks = 0x3E0;
@@ -29,7 +41,7 @@
                             FSBlocks = 0xF80;
                             break;
                         default:
-                            throw new Exception("Unsupported Controller Type & Block Type Combination");
+                            throw new XConfigException(config);
                     }
                     MetaType = 0;
                     BlockSize = 0x4000; // 16KB
@@ -41,7 +53,7 @@
                         case 0:
                         case 1:
                             if(ControllerType == 1 && BlockType == 0)
-                                throw new Exception("Unsupported Controller Type & Block Type Combination");
+                                throw new XConfigException(config);
                             MetaType = 1;
                             BlockSize = 0x4000; //16KB
                             if(ControllerType != 1 && BlockType == 1) {
@@ -74,11 +86,11 @@
                             }
                             break;
                         default:
-                            throw new Exception("Unsupported Controller Type & Block Type Combination");
+                            throw new XConfigException(config);
                     }
                     break;
                 default:
-                    throw new Exception("Unsupported Controller Type & Block Type Combination");
+                    throw new XConfigException(config);
             }
             SizeSmallBlocks = (BlockSize * SizeBlocks) / 0x4000;
             PagesPerBlock = (BlockSize / PageSize);
@@ -88,6 +100,11 @@
 
         public uint BlockSize { get; private set; }
         public uint BlockRawSize { get; private set; }
+
+        public uint BlockReadSize {
+            get { return 0x4200; } // Always read 0x4200 bytes for now...
+        }
+
         public uint BlockType { get; private set; }
         public uint Config { get; private set; }
         public uint ControllerType { get; private set; }
@@ -162,7 +179,7 @@
             try {
                 var ret = SizeToRawBlocks(fi.Length);
                 Main.SendDebug(string.Format("RAW Blocks: 0x{0:X}", ret));
-                if (blocks == 0 || blocks > ret)
+                if(blocks == 0 || blocks > ret)
                     return ret;
                 return blocks;
             }
@@ -170,14 +187,13 @@
                 try {
                     var ret = SizeToBlocks(fi.Length);
                     Main.SendDebug(string.Format("Blocks: 0x{0:X}", ret));
-                    if (blocks == 0 || blocks > ret)
+                    if(blocks == 0 || blocks > ret)
                         return ret;
                     return blocks;
                 }
                 catch(Exception) {
                     throw new ArgumentException("Filesize is not dividable by block size netheir raw nor logical!");
                 }
-                
             }
         }
 

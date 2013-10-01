@@ -32,10 +32,9 @@ namespace x360NANDManager.XSVF {
             gch.Free();
         }
 
-        private void WaitForStatus(short waitFor, int waitTime = 1, int seconds = 100) {
-// ReSharper disable RedundantAssignment
-            var maxSeconds = seconds;
-// ReSharper restore RedundantAssignment
+        private void WaitForStatus(short waitFor, int waitTime = 1, int maxSeconds = 100)
+        {
+            var seconds = maxSeconds;
             short status = 0;
             while (status != waitFor && seconds > 0)
             {
@@ -60,7 +59,7 @@ namespace x360NANDManager.XSVF {
             var data = new byte[] { 0x07, 0x20, 0x12, 0x00, 0x12, 0x01, 0x02, 0x08, 0x01, 0x08, 0x00, 0x00, 0x00, 0x20, 0x01, 0x0f, 0xff, 0x8f, 0xff, 0x09, 0x00, 0x00, 0x00, 0x00, 0xf6, 0xe5, 0xf0, 0x93, 0x00, 0x00, 0x00, 0x00 };
             var err = WriteToDevice(data);
             if (err != ErrorCode.Success)
-                throw new DeviceError(DeviceError.ErrorLevels.USBError, err);
+                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
             SendCMD(0x2E, 0x40, new byte[] { 0x24});
             WaitForStatus(0x22, 100);
             SendCMD(0x2E, 0x40, new byte[] { 0x20 });
@@ -118,7 +117,7 @@ namespace x360NANDManager.XSVF {
                 Buffer.BlockCopy(data, i, tmp, 0, ((i + packetSize >= data.Length) ? data.Length % packetSize : packetSize));
                 var err = WriteToDevice(tmp);
                 if (err != ErrorCode.Success)
-                    throw new DeviceError(DeviceError.ErrorLevels.USBError, err);
+                    throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
                 WaitForStatus((short)((i + packetSize >= data.Length) ? 0x22 : 0x21));
             }
             Release();

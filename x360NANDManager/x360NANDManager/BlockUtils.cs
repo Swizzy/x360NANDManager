@@ -1,6 +1,5 @@
 ﻿namespace x360NANDManager {
     using System;
-    using System.IO;
 
     public abstract class BlockUtils : Utils {
         private static byte[] CalcECD(ref byte[] data, int offset) {

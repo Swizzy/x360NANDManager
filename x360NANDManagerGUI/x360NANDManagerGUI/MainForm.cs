@@ -13,6 +13,7 @@
     internal sealed partial class MainForm : Form {
         private readonly Debug _dbg = new Debug();
         private bool _abort;
+        private readonly bool _isAdmin;
         private Stopwatch _sw = new Stopwatch();
         private ISPIFlasher _spiFlasher;
         private IMMCFlasher _mmcFlasher;
@@ -35,6 +36,11 @@
 
         public MainForm() {
             InitializeComponent();
+            _isAdmin = Program.IsUserAnAdmin();
+            if(!_isAdmin)
+                MessageBox.Show("MMC Functions are disabled... you need to start this program as admin to use them!", "Admin rights are required for MMC functions...", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            mmc.Enabled = _isAdmin;
+
         }
 
         private void Form1Load(object sender, EventArgs e) {
@@ -69,8 +75,15 @@
             try {
                 if(!InvokeRequired) {
                     progress.Value = (int) data.Percentage;
-                    if(spi.Checked && _xsvfFlasher == null)
+                    if(spi.Checked && _xsvfFlasher == null) {
+                        if (data.Current > data.Maximum) {
+                            if (data.Current - data.Maximum > data.Maximum)
+                                data.Current = data.Current - data.Maximum - data.Maximum;
+                            else
+                                data.Current = data.Current - data.Maximum;
+                        }
                         statuslbl.Text = string.Format("Processed block 0x{0:X} of 0x{1:X}", data.Current, data.Maximum);
+                    }
                     else {
                         statuslbl.Text = string.Format("Processed {0} of {1} ({2}/s)", GetSizeReadable(data.Current), GetSizeReadable(data.Maximum), GetSizeReadable((long) (data.Current / _sw.Elapsed.TotalSeconds)));
                     }
@@ -122,8 +135,8 @@
                         _xsvfFlasher.WriteXSVF(args.File);
                         e.Result = true;
                     }
-                    catch(DeviceError ex) {
-                        if(ex.ErrorLevel == DeviceError.ErrorLevels.IncompatibleDevice)
+                    catch(x360NANDManagerException ex) {
+                        if(ex.ErrorLevel == x360NANDManagerException.ErrorLevels.IncompatibleDevice)
                             MessageBox.Show(Resources.IncompatibleXSVF);
                         else
                             throw;
@@ -145,15 +158,19 @@
                     e.Result = true;
                     switch(args.Operation) {
                         case BWArgs.Operations.Read:
+                            _dbg.AddDebug("Reading started...");
                             _mmcFlasher.Read(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value);
                             break;
                         case BWArgs.Operations.Erase:
+                            _dbg.AddDebug("Erase started...");
                             _mmcFlasher.ZeroData((long)mmcoffsetbox.Value, (long)mmccountbox.Value);
                             break;
                         case BWArgs.Operations.Write:
+                            _dbg.AddDebug("Write started...");
                             _mmcFlasher.Write(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value, args.Verify);
                             break;
                         default:
+                            _dbg.AddDebug("Unkown command found!");
                             throw new ArgumentOutOfRangeException();
                     }
                 }

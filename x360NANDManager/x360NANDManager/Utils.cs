@@ -27,6 +27,7 @@
         }
 
         internal static T[] RemoveDuplicatesInList<T>(IEnumerable<T> list) {
+            Main.SendDebug("Removing duplicate entries...");
             var newlist = new List<T>();
             foreach(var tmp in list) {
                 if(!newlist.Contains(tmp))
@@ -62,6 +63,7 @@
         }
 
         protected static long GetTotalFreeSpace(string path) {
+            Main.SendDebug(string.Format("Getting total Free Space for: {0}", Path.GetPathRoot(path)));
             foreach(var drive in DriveInfo.GetDrives()) {
                 if(!drive.IsReady || !drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     continue;
@@ -73,6 +75,7 @@
         }
 
         private static bool FileSystemHas4GBSupport(string path) {
+            Main.SendDebug("Checking 4GB+ Support...");
             foreach(var drive in DriveInfo.GetDrives()) {
                 if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     return !drive.DriveFormat.StartsWith("FAT", StringComparison.CurrentCultureIgnoreCase);
@@ -81,6 +84,7 @@
         }
 
         private static bool FileSystemHas2GBSupport(string path) {
+            Main.SendDebug("Checking 2GB+ Support...");
             foreach(var drive in DriveInfo.GetDrives()) {
                 if(drive.IsReady && drive.RootDirectory.FullName.Equals(Path.GetPathRoot(path), StringComparison.CurrentCultureIgnoreCase))
                     return !drive.DriveFormat.Equals("FAT", StringComparison.CurrentCultureIgnoreCase);

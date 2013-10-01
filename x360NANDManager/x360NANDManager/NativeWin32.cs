@@ -159,6 +159,7 @@
         #region Functions
 
         internal static SafeFileHandle GetFileHandle(string path, FileAccess fileAccess = FileAccess.ReadWrite, FileShare fileShare = FileShare.ReadWrite | FileShare.Delete, FileMode fileMode = FileMode.Open) {
+            Main.SendDebug(string.Format("Getting Handle for: {0}", path));
             if(!path.StartsWith("\\\\", StringComparison.Ordinal)) {
                 if(path.Length > 1)
                     path = path.Substring(0, 1);
@@ -171,12 +172,13 @@
             Main.SendDebug(string.Format("Getting Raw Handle for: {0}", path));
             var handle = CreateFile(path.TrimEnd('\\').ToUpper(), fileAccess, fileShare, IntPtr.Zero, fileMode, 0, IntPtr.Zero);
             if(handle.IsInvalid)
-                throw new DeviceError(DeviceError.ErrorLevels.Win32Error);
+                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.Win32Error);
             Main.SendDebug("OK!");
             return handle;
         }
 
         internal static int GetDeviceNumber(string devicePath) {
+            Main.SendDebug(string.Format("Getting Drive number for Device: {0}", devicePath));
             var handle = GetFileHandle(devicePath);
             var ptrSdn = IntPtr.Zero;
             try {
@@ -201,9 +203,16 @@
             var ret = false;
             var deviceNumber = GetDeviceNumber(device);
             foreach(var drive in DriveInfo.GetDrives()) {
-                var num = GetDeviceNumber(drive.Name);
-                if(num != deviceNumber)
+                try {
+                    var num = GetDeviceNumber(drive.Name);
+                    if(num != deviceNumber)
+                        continue;
+                }
+                catch (Win32Exception ex) {
+                    if (ex.NativeErrorCode != 5)
+                        throw;
                     continue;
+                }
                 var handle = GetFileHandle(drive.Name);
                 try {
                     int outsize;
@@ -211,6 +220,7 @@
                         throw new Win32Exception(Marshal.GetLastWin32Error());
                     if(!DeviceIoControl(handle, (int) IOCTL.DismountVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero))
                         throw new Win32Exception(Marshal.GetLastWin32Error());
+                    Main.SendDebug(string.Format("{0} Successfully locked!", drive.Name));
                     ret = true;
                 }
                 finally {
@@ -224,15 +234,29 @@
             Main.SendDebug(string.Format("Unlocking: {0}", device));
             var deviceNumber = GetDeviceNumber(device);
             foreach(var drive in DriveInfo.GetDrives()) {
-                var num = GetDeviceNumber(drive.Name.Substring(0, 2));
-                if(num != deviceNumber)
+                try
+                {
+                    var num = GetDeviceNumber(drive.Name);
+                    if (num != deviceNumber)
+                        continue;
+                }
+                catch (Win32Exception ex)
+                {
+                    if (ex.NativeErrorCode != 5)
+                        throw;
                     continue;
+                }
                 var handle = GetFileHandle(drive.Name);
                 try {
                     int outsize;
-                    if(!DeviceIoControl(handle, (int) IOCTL.UnlockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero))
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
-                    return;
+                    if(!DeviceIoControl(handle, (int) IOCTL.UnlockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero)) {
+                        var err = Marshal.GetLastWin32Error();
+                        if (err != 158) // Device already unlocked, ok... skip it?!
+                            throw new Win32Exception(err);
+                        Main.SendDebug(string.Format("{0} Is Already Unlocked!", drive.Name));
+                    }
+                    else
+                        Main.SendDebug(string.Format("{0} Successfully Unlocked!", drive.Name));
                 }
                 finally {
                     handle.Close();
@@ -241,6 +265,7 @@
         }
 
         internal static string GetDevicePath(string device) {
+            Main.SendDebug(string.Format("Getting Drive path for Device: {0}", device));
             var deviceNumber = GetDeviceNumber(device);
             var diskGUID = new Guid("53F56307-B6BF-11D0-94F2-00A0C91EFB8B");
             var handle = SetupDiGetClassDevs(ref diskGUID, IntPtr.Zero, IntPtr.Zero, (uint) (DIGCF.DIGCFPresent | DIGCF.DIGCFDeviceinterface));
@@ -269,7 +294,7 @@
                         }
                         i++;
                     }
-                    throw new DeviceError(DeviceError.ErrorLevels.NoDeviceFound);
+                    throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
                 }
             }
             finally {
@@ -343,6 +368,7 @@
         //}
 
         internal static DiskGeometryEX GetGeometryEX(string rawaddr) {
+            Main.SendDebug(string.Format("Getting Drive Geometry for Device: {0}", rawaddr));
             var handle = GetFileHandleRaw(rawaddr);
             try {
                 return GetGeometryEX(handle);

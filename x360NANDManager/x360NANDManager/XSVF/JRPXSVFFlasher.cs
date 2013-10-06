@@ -38,24 +38,24 @@ namespace x360NANDManager.XSVF {
             gch.Free();
         }
 
-        private bool WaitForStatus(XSVFCommands waitFor, int waitTime = 1, int maxSeconds = 100, bool throwErr = true) {
+        private bool WaitForStatus(XSVFCommands waitFor, int waitTime = 1, int maxTries = 100, bool throwErr = true) {
             Main.SendDebug("Waiting for status {0}", waitFor);
-            var seconds = maxSeconds;
+            var tries = maxTries;
             XSVFCommands status = 0;
-            while(status != waitFor && seconds > 0) {
+            while(status != waitFor && tries > 0) {
                 Thread.Sleep(waitTime);
                 byte[] ret;
                 SendCMD(XSVFCommands.XSVFPoll, 0xC0, 2, out ret);
                 status = (XSVFCommands) ret[0];
-                seconds--;
-                Main.SendDebug("Status: {0} Cycle: {1}", status, Math.Abs(seconds - maxSeconds));
+                tries--;
+                Main.SendDebug("Status: {0} Cycle: {1}", status, Math.Abs(tries - maxTries));
                 if(status != XSVFCommands.XSVFError || waitFor == XSVFCommands.XSVFError)
                     continue;
                 if(!throwErr)
                     return false;
-                throw new Exception("XSVFError encountered!");
+                throw new Exception(string.Format("XSVFError encountered! (0x{0:X2})", ret[1]));
             }
-            if(seconds <= 0)
+            if(tries <= 0)
                 throw new TimeoutException();
             return true;
         }
@@ -91,17 +91,18 @@ namespace x360NANDManager.XSVF {
                         throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.IdentFailed);
                 }
             }
-            GC.Collect(); // Clean up memory a little
             UpdateStatus("Erasing CPLD...");
             SendCMD(XSVFCommands.XSVFCmd, 0x40, new[] {
                                                       (byte) XSVFCommands.XSVFErase
                                                       });
             WaitForStatus(XSVFCommands.XSVFOk, 100);
             UpdateStatus("CPLD Erased OK!");
+            UpdateStatus("Starting Interpreter...");
             SendCMD(XSVFCommands.XSVFCmd, 0x40, new[] {
                                                       (byte) XSVFCommands.XSVFPlay
                                                       });
-            WaitForStatus(XSVFCommands.XSVFOut, 100, 120);
+            WaitForStatus(XSVFCommands.XSVFOut, 100);
+            UpdateStatus("Interpreter started OK!");
         }
 
         #region Implementation of IXSVFFlasher
@@ -140,6 +141,7 @@ namespace x360NANDManager.XSVF {
             }
             if(packetSize == 0)
                 throw new Exception("Something went wrong with grabbing the packet size!");
+            UpdateStatus("Sending out packets...");
             for(var i = 0; i < data.Length; i += packetSize) {
                 if(AbortRequested) {
                     sw.Stop();
@@ -153,10 +155,11 @@ namespace x360NANDManager.XSVF {
                 var err = WriteToDevice(tmp);
                 if(err != ErrorCode.Success)
                     throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
-                WaitForStatus(i + packetSize >= data.Length ? XSVFCommands.XSVFOk : XSVFCommands.XSVFOut);
+                WaitForStatus(i + packetSize >= data.Length ? XSVFCommands.XSVFOk : XSVFCommands.XSVFOut, 2);
                 if(i + packetSize >= data.Length)
                     UpdateProgress((uint) data.Length, (uint) data.Length);
             }
+            UpdateStatus("All packets sent OK!");
             Release();
             UpdateStatus("XSVF Flashing completed after {0:F0} Minutes {1:F0} Seconds", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds);
         }

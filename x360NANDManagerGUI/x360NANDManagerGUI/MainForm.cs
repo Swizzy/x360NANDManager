@@ -76,18 +76,16 @@
                 if(!InvokeRequired) {
                     progress.Value = (int) data.Percentage;
                     if(spi.Checked && _xsvfFlasher == null) {
-                        if (data.Current > data.Maximum) {
-                            if (data.Current - data.Maximum > data.Maximum)
+                        if(data.Current > data.Maximum) {
+                            if(data.Current - data.Maximum > data.Maximum)
                                 data.Current = data.Current - data.Maximum - data.Maximum;
                             else
                                 data.Current = data.Current - data.Maximum;
                         }
                         statuslbl.Text = string.Format("Processed block 0x{0:X} of 0x{1:X}", data.Current, data.Maximum);
                     }
-                    else {
+                    else
                         statuslbl.Text = string.Format("Processed {0} of {1} ({2}/s)", GetSizeReadable(data.Current), GetSizeReadable(data.Maximum), GetSizeReadable((long) (data.Current / _sw.Elapsed.TotalSeconds)));
-                    }
-
                 }
                 else
                     Invoke(new MethodInvoker(() => SetProgress(data)));
@@ -135,8 +133,8 @@
                         _xsvfFlasher.WriteXSVF(args.File);
                         e.Result = true;
                     }
-                    catch(x360NANDManagerException ex) {
-                        if(ex.ErrorLevel == x360NANDManagerException.ErrorLevels.IncompatibleDevice)
+                    catch(X360NANDManagerException ex) {
+                        if(ex.ErrorLevel == X360NANDManagerException.ErrorLevels.IncompatibleDevice)
                             MessageBox.Show(Resources.IncompatibleXSVF);
                         else
                             throw;

@@ -6,6 +6,44 @@
     using x360NANDManager.Properties;
 
     public abstract class Utils {
+#if DEBUG
+        private static readonly char[] HexCharTable = new[] {
+                                                            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+                                                            };
+
+        internal static string ArrayToHex(IList<byte> value, int i = 0, int count = -1)
+        {
+            var c = new char[value.Count * 2];
+            if (count == -1)
+                count = value.Count - i;
+            else
+                count = count + i;
+            for (var p = 0; i < count; )
+            {
+                var d = value[i++];
+                c[p++] = HexCharTable[d / 0x10];
+                c[p++] = HexCharTable[d % 0x10];
+            }
+            var tmp = new string(c);
+            var ret = "0x";
+            var pos = 0;
+            foreach(var s in tmp) {
+                if (pos > 0) {
+                    if(pos % 32 == 0)
+                        ret += "\n";
+                    if (pos % 2 == 0 && pos % 32 != 0)
+                        ret += " 0x";
+                    else
+                        ret += "0x";
+                }
+                ret += s;
+                pos++;
+            }
+            return ret.Trim();
+        }
+
+#endif
+
         internal static string GetSizeReadable(long i) {
             if(i >= 0x1000000000000000) // Exabyte
                 return string.Format("{0:0.##} EB", (double) (i >> 50) / 1024);
@@ -36,15 +74,13 @@
             return newlist.ToArray();
         }
 
-        public bool CompareByteArrays(byte[] buf, byte[] buf2)
-        {
-            if (buf == buf2)
+        public bool CompareByteArrays(byte[] buf, byte[] buf2) {
+            if(buf == buf2)
                 return true;
-            if (buf == null || buf2 == null || buf.Length != buf2.Length)
+            if(buf == null || buf2 == null || buf.Length != buf2.Length)
                 return false;
-            for (var i = 0; i < buf.Length; i++)
-            {
-                if (buf[i] != buf2[i])
+            for(var i = 0; i < buf.Length; i++) {
+                if(buf[i] != buf2[i])
                     return false;
             }
             return true;
@@ -97,7 +133,7 @@
                 return new BinaryReader(File.Open(file, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read));
             }
             catch(Exception) {
-                if (MessageBox.Show(string.Format(Resources.OpenReadFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
+                if(MessageBox.Show(string.Format(Resources.OpenReadFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
                     return OpenReader(file);
             }
             return null;
@@ -108,7 +144,7 @@
                 return new BinaryWriter(File.Open(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None));
             }
             catch(Exception) {
-                if (MessageBox.Show(string.Format(Resources.OpenWriteFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
+                if(MessageBox.Show(string.Format(Resources.OpenWriteFailed, file, Environment.NewLine), Resources.LoadFileErrorTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error) == DialogResult.Retry)
                     return OpenWriter(file);
             }
             return null;

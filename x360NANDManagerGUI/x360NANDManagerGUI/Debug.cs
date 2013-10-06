@@ -10,11 +10,11 @@
             InitializeComponent();
         }
 
-        [Conditional("DEBUG")] public void ShowDebug() {
+        [Conditional("DEBUG")] [Conditional("ALPHA")] public void ShowDebug() {
             Show();
         }
 
-        [Conditional("DEBUG")] public void AddDebug(string msg) {
+        [Conditional("DEBUG")] [Conditional("ALPHA")] public void AddDebug(string msg) {
             try {
                 if(!InvokeRequired) {
                     outputbox.AppendText(msg + Environment.NewLine);
@@ -44,9 +44,8 @@
             e.Cancel = outputbox.Text.Length == 0;
         }
 
-        private void DebugFormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (e.CloseReason == CloseReason.UserClosing)
+        private void DebugFormClosing(object sender, FormClosingEventArgs e) {
+            if(e.CloseReason == CloseReason.UserClosing)
                 e.Cancel = true;
         }
     }

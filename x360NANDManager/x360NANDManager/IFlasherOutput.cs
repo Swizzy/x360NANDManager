@@ -14,9 +14,9 @@
 
         void UpdateMMCProgressEX(long offset, long maximum, long bufsize);
 
-        void UpdateStatus(string message);
+        void UpdateStatus(string message, params object[] args);
 
-        void SendError(string message);
+        void SendError(string message, params object[] args);
 
         bool IsBadBlock(uint status, uint block, string operation, bool verbose = false);
 

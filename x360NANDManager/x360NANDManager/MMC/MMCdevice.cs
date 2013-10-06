@@ -82,7 +82,7 @@ namespace x360NANDManager.MMC {
             if(DeviceHandle != null && !DeviceHandle.IsInvalid)
                 Release();
             if(!NativeWin32.LockDevice(Path))
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.DeviceLockFailed);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
             Main.SendDebug("Device locked... opening the handle now!");
             DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Read);
@@ -97,7 +97,7 @@ namespace x360NANDManager.MMC {
             if(DeviceHandle != null && !DeviceHandle.IsInvalid)
                 Release();
             if(!NativeWin32.LockDevice(Path))
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.DeviceLockFailed);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
             Main.SendDebug("Device locked... opening the handle now!");
             DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Write, FileShare.None);

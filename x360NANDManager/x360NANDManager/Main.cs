@@ -33,12 +33,12 @@
                 return new ARMFlasher(0xFFFF, 0x4);
             if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
                 return new ARMFlasher(0x11D4, 0x8338);
-            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         public static ISPIFlasher GetSPIFlasher(int vendorID, int productID) {
             if(!NativeWin32.IsDeviceConnected(vendorID, productID))
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
             return new ARMFlasher(vendorID, productID);
         }
 
@@ -46,18 +46,18 @@
             if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4)) {
                 var flasher = new ARMXSVFFlasher(0xFFFF, 0x4);
                 if(!flasher.IsCompatibleVersion())
-                    throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.IncompatibleDevice);
+                    throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.IncompatibleDevice);
                 return flasher;
             }
             if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
                 return new JRPXSVFFlasher(0x11D4, 0x8338);
-            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         public static IXSVFFlasher GetXSVFFlasher(int vendorID, int productID) {
             if(NativeWin32.IsDeviceConnected(vendorID, productID))
                 return new ARMXSVFFlasher(vendorID, productID);
-            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         public static IMMCFlasher GetMMCFlasher(MMCDevice device) {
@@ -74,7 +74,11 @@
 
         public static event EventHandler<EventArg<string>> Debug;
 
-        [Conditional("DEBUG")] internal static void SendDebug(string message) {
+        [Conditional("DEBUG")]
+        [Conditional("ALPHA")]
+        internal static void SendDebug(string message, params object[] args)
+        {
+            message = args.Length == 0 ? message : string.Format(message, args);
             var dbg = Debug;
             if(dbg != null && message != null)
                 dbg(null, new EventArg<string>(message));

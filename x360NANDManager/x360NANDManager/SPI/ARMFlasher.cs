@@ -26,7 +26,7 @@
             if(DeviceInit(vendorID, productID))
                 return;
             Release();
-            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
         /// <summary>
@@ -51,18 +51,18 @@
         private void UsbDeviceOnUsbErrorEvent(object sender, UsbError usbError) {
             Main.SendDebug(String.Format("A USB Error Occured: {0}", usbError));
             if(Device == null || !Device.IsOpen)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.DeviceCrashed);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceCrashed);
         }
 
         protected void CheckDeviceState() {
             if(Device == null || !Device.IsOpen)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.DeviceNotInitialized);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceNotInitialized);
         }
 
         private void CheckFlashState() {
             CheckDeviceState();
             if(!_flashInitialized)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.FlashNotInitialized);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.FlashNotInitialized);
         }
 
         protected void SendCMD(Commands cmd, uint argA = 0, uint argB = 0) {
@@ -151,6 +151,9 @@
             if(buf == null)
                 throw new ArgumentNullException("buf");
             Main.SendDebug(string.Format("Writing 0x{0:X} Bytes to device", buf.Length));
+#if DEBUG
+                Main.SendDebug(string.Format("Data: \n{0}", ArrayToHex(buf)));
+#endif
             var totalwrote = 0;
             var err = ErrorCode.None;
             while(totalwrote < buf.Length && tries > 0) {
@@ -189,7 +192,7 @@
             var val = BitConverter.ToUInt32(buf, 0);
             if(err != ErrorCode.None) {
                 Main.SendDebug(String.Format("ReadUInt32 Failed! Error: {0} Value read: {1}", err, val));
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             }
             return val;
         }
@@ -226,7 +229,7 @@
 
         /// <summary>
         ///   Initialize the flash before operations start
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized, there is a fatal USB error or for unsupported flashconfig types</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized, there is a fatal USB error or for unsupported flashconfig types</exception>
         ///   <exception cref="ArgumentException">If flashconfig is invalid</exception>
         /// </summary>
         /// <param name="config"> Flashconfig information (Information about the consoles memory) </param>
@@ -240,7 +243,7 @@
 
         /// <summary>
         ///   DeInitalize flash after operations complete
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized</exception>
         /// </summary>
         public void DeInit() {
             CheckDeviceState();
@@ -263,7 +266,7 @@
 
         /// <summary>
         ///   Cycle device between operations
-        ///   <exception cref="x360NANDManagerException">If there is any problem with the device or the reset fails</exception>
+        ///   <exception cref="X360NANDManagerException">If there is any problem with the device or the reset fails</exception>
         /// </summary>
         public void Reset(bool initNANDFlash = true) {
             DeInit();
@@ -278,7 +281,7 @@
                 if(_xcfg.Config == tmp.Config)
                     return;
             }
-            throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.ResetFailed);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.ResetFailed);
         }
 
         /// <summary>
@@ -290,7 +293,7 @@
 
         /// <summary>
         ///   Sends the erase command for <paramref name="blockID" />
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///   <exception cref="ArgumentOutOfRangeException">If
         ///     <paramref name="blockID" />
         ///     is greater then total blocks on device</exception>
@@ -310,7 +313,7 @@
 
         /// <summary>
         ///   Sends the erase command for BlockID: <paramref name="startBlock" /> and onwards for <paramref name="blockCount" />
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///   <exception cref="ArgumentException">If there is a problem with your block count settings</exception>
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
@@ -346,7 +349,7 @@
 
         /// <summary>
         ///   Writes the data of <paramref name="data" /> to <paramref name="blockID" /> <c>as is</c>
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///   <exception cref="ArgumentOutOfRangeException">If
         ///     <paramref name="blockID" />
         ///     is greater then total blocks on device</exception>
@@ -363,7 +366,7 @@
             SendCMD(Commands.DataWrite, blockID, (uint) data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.Success)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             if(_vendorID != 0x11D4 && _productID != 0x8338)
                 SendCMD(Commands.DataExec, blockID);
             var status = GetFlashStatus();
@@ -632,7 +635,7 @@
 
         /// <summary>
         ///   Reads <paramref name="blockID" /> using the block size specified by the flashconfig
-        ///   <exception cref="x360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
+        ///   <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///   <exception cref="ArgumentOutOfRangeException">If
         ///     <paramref name="blockID" />
         ///     is greater then total blocks on device</exception>
@@ -648,7 +651,7 @@
             SendCMD(Commands.DataRead, blockID, (uint) data.Length);
             var err = ReadFromDevice(ref data);
             if(err != ErrorCode.Success)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             var status = GetFlashStatus();
             IsBadBlock(status, blockID, "Reading", verboseLevel >= 1);
             return data;

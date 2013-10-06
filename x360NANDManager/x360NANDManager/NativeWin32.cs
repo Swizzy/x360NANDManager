@@ -172,7 +172,7 @@
             Main.SendDebug(string.Format("Getting Raw Handle for: {0}", path));
             var handle = CreateFile(path.TrimEnd('\\').ToUpper(), fileAccess, fileShare, IntPtr.Zero, fileMode, 0, IntPtr.Zero);
             if(handle.IsInvalid)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.Win32Error);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.Win32Error);
             Main.SendDebug("OK!");
             return handle;
         }
@@ -294,7 +294,7 @@
                         }
                         i++;
                     }
-                    throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.NoDeviceFound);
+                    throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
                 }
             }
             finally {

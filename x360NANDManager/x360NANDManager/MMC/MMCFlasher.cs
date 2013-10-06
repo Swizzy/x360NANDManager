@@ -527,7 +527,7 @@ namespace x360NANDManager.MMC {
                         tmp[devnum].DisplayName = string.Format("{0}, {1}", tmp[devnum].DisplayName, drive.Name);
                 }
                 catch(Exception ex) {
-                    var dex = ex as x360NANDManagerException;
+                    var dex = ex as X360NANDManagerException;
                     if (dex != null && (dex.Win32ErrorNumber == 32 || dex.Win32ErrorNumber == 0 /* Success, not an error?! */ || dex.Win32ErrorNumber == 21/* Device not ready... ignore it... */))
                         continue;
                     var wex = ex as Win32Exception;

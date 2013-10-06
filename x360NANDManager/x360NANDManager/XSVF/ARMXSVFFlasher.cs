@@ -93,7 +93,7 @@ namespace x360NANDManager.XSVF {
             SendCMD(Commands.DataWrite, 0, (uint)data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.None)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             UpdateStatus(string.Format("0x{0:X} bytes sent OK!{1}Executing File...", data.Length, Environment.NewLine));
             ExecuteXSVF();
             UpdateStatus(GetARMStatus() != 0 ? "FAILED!" : "OK!");
@@ -111,7 +111,7 @@ namespace x360NANDManager.XSVF {
             SendCMD(Commands.DataWrite, 0, (uint)data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.None)
-                throw new x360NANDManagerException(x360NANDManagerException.ErrorLevels.USBError, err);
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             UpdateStatus(string.Format("0x{0:X} bytes sent OK!{1}Executing File...", data.Length, Environment.NewLine));
             ExecuteXSVF();
             UpdateStatus(GetARMStatus() != 0 ? "FAILED!" : "OK!");

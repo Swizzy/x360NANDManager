@@ -75,7 +75,10 @@
         ///   Fires the <seealso cref="Status" /> event with specified message
         /// </summary>
         /// <param name="message"> Message to send </param>
-        public void UpdateStatus(string message) {
+        /// <param name="args"> Optional parameters if you want to use it like printf or string.format </param>
+        public void UpdateStatus(string message, params object[] args)
+        {
+            message = args.Length == 0 ? message : string.Format(message, args);
             var stat = Status;
             if(stat != null && !string.IsNullOrEmpty(message))
                 stat(null, new EventArg<string>(message));
@@ -85,7 +88,10 @@
         ///   Fires the <seealso cref="Error" /> event with specified message, it also forwards the message to the Debug event
         /// </summary>
         /// <param name="message"> Message to send </param>
-        public void SendError(string message) {
+        /// <param name="args"> Optional parameters if you want to use it like printf or string.format </param>
+        public void SendError(string message, params object[] args)
+        {
+            message = args.Length == 0 ? message : string.Format(message, args);
             var err = Error;
             if(err == null || string.IsNullOrEmpty(message))
                 return;
@@ -103,7 +109,7 @@
         /// <returns> True if the status says the block is bad </returns>
         public bool IsBadBlock(uint status, uint block, string operation, bool verbose = false) {
             if(status != 0x200 && status > 0) {
-                SendError(string.Format("ERROR: 0x{0:X} {1} block 0x{2:X}", status, operation, block));
+                SendError("ERROR: 0x{0:X} {1} block 0x{2:X}", status, operation, block);
                 if(verbose) {
                     SendError("This error Means:");
                     if((status & 0x800) == 0x800)
@@ -132,7 +138,7 @@
                 return true;
             }
             if(status == 0)
-                SendError(string.Format("Unkown Status code (0) Encounterd! while {0} block 0x{1:X}", operation, block));
+                SendError("Unkown Status code (0) Encounterd! while {0} block 0x{1:X}", operation, block);
             return false;
         }
 
@@ -145,21 +151,21 @@
         /// <param name="verboselevel"> Verbosity level of the output </param>
         protected void PrintXConfig(XConfig cfg, int verboselevel = 0) {
             if(verboselevel >= 0)
-                UpdateStatus(string.Format("FlashConfig:         0x{0:X08}", cfg.Config));
+                UpdateStatus("FlashConfig:         0x{0:X08}", cfg.Config);
             if(verboselevel >= 1) {
-                UpdateStatus(string.Format("Page Size:           0x{0:X}", cfg.PageSize));
-                UpdateStatus(string.Format("Meta Size:           0x{0:X}", cfg.MetaSize));
-                UpdateStatus(string.Format("Meta Type:           0x{0:X}", cfg.MetaType));
-                UpdateStatus(string.Format("Block Size (RAW):    0x{0:X}", cfg.BlockRawSize));
-                UpdateStatus(string.Format("Block Size:          0x{0:X}", cfg.BlockSize));
+                UpdateStatus("Page Size:           0x{0:X}", cfg.PageSize);
+                UpdateStatus("Meta Size:           0x{0:X}", cfg.MetaSize);
+                UpdateStatus("Meta Type:           0x{0:X}", cfg.MetaType);
+                UpdateStatus("Block Size (RAW):    0x{0:X}", cfg.BlockRawSize);
+                UpdateStatus("Block Size:          0x{0:X}", cfg.BlockSize);
             }
             if(verboselevel >= 2)
-                UpdateStatus(string.Format("Pages Per Block:     {0}", cfg.PagesPerBlock));
+                UpdateStatus("Pages Per Block:     {0}", cfg.PagesPerBlock);
             if(verboselevel >= 0)
-                UpdateStatus(string.Format("Size Blocks:         0x{0:X}", cfg.SizeBlocks));
+                UpdateStatus("Size Blocks:         0x{0:X}", cfg.SizeBlocks);
             if(verboselevel >= 2) {
-                UpdateStatus(string.Format("Small BlocksCount:   0x{0:X}", cfg.SizeSmallBlocks));
-                UpdateStatus(string.Format("File Blocks:         0x{0:X}", cfg.FSBlocks));
+                UpdateStatus("Small BlocksCount:   0x{0:X}", cfg.SizeSmallBlocks);
+                UpdateStatus("File Blocks:         0x{0:X}", cfg.FSBlocks);
             }
             if(verboselevel >= 1) {
                 UpdateStatus(string.Format(new NumberFormatInfo {
@@ -168,12 +174,12 @@
                 UpdateStatus(string.Format(new NumberFormatInfo {
                                                                 NumberGroupSeparator = " ", NumberDecimalDigits = 0
                                                                 }, "Size Bytes (RAW):    {0:N} B", cfg.SizeRawBytes));
-                UpdateStatus(string.Format("Size Readable:       {0}", GetSizeReadable(cfg.SizeBytes)));
-                UpdateStatus(string.Format("Size Readable (RAW): {0}", GetSizeReadable(cfg.SizeRawBytes)));
+                UpdateStatus("Size Readable:       {0}", GetSizeReadable(cfg.SizeBytes));
+                UpdateStatus("Size Readable (RAW): {0}", GetSizeReadable(cfg.SizeRawBytes));
             }
             if(verboselevel >= 3) {
-                UpdateStatus(string.Format("Controller Type:     {0}", cfg.ControllerType));
-                UpdateStatus(string.Format("Block Type:          {0}", cfg.BlockType));
+                UpdateStatus("Controller Type:     {0}", cfg.ControllerType);
+                UpdateStatus("Block Type:          {0}", cfg.BlockType);
             }
         }
     }

@@ -71,11 +71,6 @@
             ///   Device is not compatible with the requested feature
             /// </summary>
             IncompatibleDevice,
-
-            /// <summary>
-            ///   Device identification failed... (JR-Programmer XSVF error)
-            /// </summary>
-            IdentFailed
         }
 
         #endregion

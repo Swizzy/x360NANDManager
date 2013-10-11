@@ -51,9 +51,11 @@ namespace x360NANDManager.XSVF {
                 Main.SendDebug("Status: {0} Cycle: {1}", status, Math.Abs(tries - maxTries));
                 if(status != XSVFCommands.XSVFError || waitFor == XSVFCommands.XSVFError)
                     continue;
-                if(!throwErr)
+                if(!throwErr) {
+                    Main.SendDebug("Error code: {0}", (XSVFException.XSVFErrors) ret[1]);
                     return false;
-                throw new Exception(string.Format("XSVFError encountered! (0x{0:X2})", ret[1]));
+                }
+                throw new XSVFException(ret[1]);
             }
             if(tries <= 0)
                 throw new TimeoutException();
@@ -77,7 +79,7 @@ namespace x360NANDManager.XSVF {
         private void InitXSVF() {
             CheckDeviceState();
             var data = new byte[] {
-                                  0x07, 0x20, 0x12, 0x00, 0x12, 0x01, 0x02, 0x08, 0x01, 0x08, 0x00, 0x00, 0x00, 0x20, 0x01, 0x0F, 0xFF, 0x8F, 0xFF, 0x09, 0x00, 0x00, 0x00, 0x00, 0xF6, 0xE5, 0xF0, 0x93, 0x00, 0x00, 0x00, 0x00 // XC2C64A
+                                  0x07, 0x20, 0x12, 0x00, 0x12, 0x01, 0x02, 0x08, 0x01, 0x08, 0x00, 0x00, 0x00, 0x20, 0x01, 0x0F, 0xFF, 0x8F, 0xFF, 0x09, 0x00, 0x00, 0x00, 0x00, 0xF6, 0xE5, 0xF0, 0x93, 0x00, 0x00, 0x00, 0x00 // XC2C64A-VQ44
                                   };
             if(!SendInitBytes(ref data)) {
                 data = new byte[] {
@@ -88,9 +90,14 @@ namespace x360NANDManager.XSVF {
                                       0x07, 0x20, 0x12, 0x00, 0x12, 0x01, 0x02, 0x08, 0x01, 0x08, 0x00, 0x00, 0x00, 0x20, 0x01, 0x0F, 0xFF, 0x8F, 0xFF, 0x09, 0x00, 0x00, 0x00, 0x00, 0xF6, 0xD8, 0xF0, 0x93, 0x00, 0x00, 0x00, 0x00 // XC2C128-VQ100 (DGX)
                                       };
                     if(!SendInitBytes(ref data))
-                        throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.IdentFailed);
+                        throw new NotSupportedException("This CPLD is currently not supported... maybe later?");
+                    UpdateStatus("Xilinx XC2C128-VQ100 Detected!");
                 }
+                else
+                    UpdateStatus("Xilinx *UNKNOWN VERSION* Detected!");
             }
+            else
+                UpdateStatus("Xilinx XC2C64A-VQ44 Detected!");
             UpdateStatus("Erasing CPLD...");
             SendCMD(XSVFCommands.XSVFCmd, 0x40, new[] {
                                                       (byte) XSVFCommands.XSVFErase
@@ -179,5 +186,27 @@ namespace x360NANDManager.XSVF {
         }
 
         #endregion
+    }
+
+    public sealed class XSVFException : Exception {
+        #region XSVFErrors enum
+
+        public enum XSVFErrors : byte {
+            TDOMistMatch = 0x01,
+            Overflow = 0x2,
+            XSVFInterpreterError = 0x03
+        }
+
+        #endregion
+
+        public readonly XSVFErrors ErrorCode;
+
+        internal XSVFException(byte errorCode) {
+            ErrorCode = (XSVFErrors) errorCode;
+        }
+
+        public override string ToString() {
+            return String.Format("XSVFError encountered! ({0})", ErrorCode);
+        }
     }
 }

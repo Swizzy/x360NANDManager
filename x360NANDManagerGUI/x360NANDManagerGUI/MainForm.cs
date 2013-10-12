@@ -317,6 +317,9 @@
             mmclbl.Enabled = mmc.Checked;
             spiblockbox.Enabled = !mmc.Checked;
             spicountbox.Enabled = !mmc.Checked;
+            rawbox.Enabled = !mmc.Checked;
+            addSpareBox.Enabled = !mmc.Checked;
+            correctSpareBox.Enabled = !mmc.Checked;
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {

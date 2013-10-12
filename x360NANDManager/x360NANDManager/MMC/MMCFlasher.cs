@@ -9,7 +9,7 @@ namespace x360NANDManager.MMC {
         private readonly MMCDevice _device;
         private readonly int _sectorSize;
         private bool _abort;
-        private long _bufsize;
+        private int _bufsize;
         private Stopwatch _sw;
 
         public MMCFlasher(MMCDevice device) {
@@ -18,31 +18,23 @@ namespace x360NANDManager.MMC {
         }
 
         private void SetBufSize() {
-            _bufsize = (_device.DiskGeometryEX.Geometry.BytesPerSector * _device.DiskGeometryEX.Geometry.SectorsPerTrack) + _device.DiskGeometryEX.Geometry.BytesPerSector;
+            _bufsize = (int) ((_device.DiskGeometryEX.Geometry.BytesPerSector * _device.DiskGeometryEX.Geometry.SectorsPerTrack) + _device.DiskGeometryEX.Geometry.BytesPerSector);
         }
 
         private void SetBufSize(long sector, long lastsector) {
             if(sector + (_bufsize / _sectorSize) > lastsector)
-                _bufsize = (lastsector - sector) * _sectorSize;
+                _bufsize = (int) ((lastsector - sector) * _sectorSize);
             else
                 SetBufSize();
         }
 
         private void SetBufSizeEX(long offset, long end) {
             if(offset + _bufsize > end)
-                _bufsize = end - offset;
+                _bufsize = (int) (end - offset);
             else
                 SetBufSize();
         }
 
-        private static void SeekFStream(ref FileStream stream, long offset, SeekOrigin origin = SeekOrigin.Begin) {
-            if(stream.Position == offset)
-                return;
-            if(stream.CanSeek)
-                stream.Seek(offset, origin);
-            else
-                throw new Exception("Unable to seek!");
-        }
 
         private void CheckDeviceState() {
             if(_device == null)
@@ -108,28 +100,23 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
             _device.OpenWriteHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
             try {
-                SeekFStream(ref stream, startSector * _sectorSize);
                 var lastsector = startSector + sectorCount;
                 UpdateStatus(string.Format("Zeroing data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 SetBufSize(startSector, lastsector);
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
-                for (var sector = startSector; sector < lastsector; sector++)
-                {
+                for(var sector = startSector; sector < lastsector; sector++) {
                     SetBufSize(sector, lastsector);
-                    UpdateMMCProgress(sector * _sectorSize, lastsector * _sectorSize, (int)_bufsize, _sectorSize);
+                    UpdateMMCProgress(sector * _sectorSize, lastsector * _sectorSize, _bufsize, _sectorSize);
                     var data = new byte[_bufsize];
-                    if (sector + (_bufsize / _sectorSize) > lastsector)
-                        Array.Resize(ref data, (int)((lastsector - sector) * _sectorSize));
-                    stream.Write(data, 0, data.Length);
+                    if(sector + (_bufsize / _sectorSize) > lastsector)
+                        Array.Resize(ref data, (int) ((lastsector - sector) * _sectorSize));
+                    _device.WriteToDevice(ref data, sector * _sectorSize);
                 }
             }
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -140,22 +127,18 @@ namespace x360NANDManager.MMC {
             CheckSizeArgsEX(offset, ref length);
             _device.OpenWriteHandle();
             var end = offset + length;
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Write);
             try {
-                SeekFStream(ref stream, offset);
                 UpdateStatus(string.Format("Zeroing data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Size: 0x{2:X}", _bufsize, _sectorSize, end));
                 for(var current = offset; current < end;) {
                     SetBufSizeEX(current, end);
                     UpdateMMCProgressEX(current, end, _bufsize);
                     var data = new byte[_bufsize];
-                    stream.Write(data, 0, data.Length);
+                    _device.WriteToDevice(ref data, current);
                     current += data.Length;
                 }
             }
             finally {
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -166,10 +149,8 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount, data.Length);
             _device.OpenWriteHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Write);
             long doffset = 0;
             try {
-                SeekFStream(ref stream, startSector * _sectorSize);
                 var lastsector = startSector + sectorCount;
                 var maxSector = lastsector;
                 if(verify)
@@ -177,49 +158,92 @@ namespace x360NANDManager.MMC {
                 UpdateStatus(string.Format("Writing data to MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 SetBufSize(startSector, lastsector);
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
-                for (var sector = startSector; sector < lastsector;) {
-                    if(_abort)
-                        return;
-                    SetBufSize(sector, lastsector);
-                    UpdateMMCProgress(sector, maxSector, _sectorSize, _bufsize);
-                    stream.Write(data, (int) doffset, (int) _bufsize);
-                    doffset += _bufsize;
-                    sector += _bufsize / _sectorSize;
-                }
-                if(!verify)
-                    return;
-                doffset = 0;
-                stream.Close();
-                _device.Release();
-                _device.OpenReadHandle();
-                stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
-                UpdateStatus(string.Format("Verifying data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 for(var sector = startSector; sector < lastsector;) {
                     if(_abort)
                         return;
                     SetBufSize(sector, lastsector);
+                    UpdateMMCProgress(sector, maxSector, _sectorSize, _bufsize);
+                    _device.WriteToDevice(ref data, sector * _sectorSize, (int) doffset, _bufsize);
+                    doffset += _bufsize;
+                    sector += _bufsize / _sectorSize;
+                }
+
+                #region Verification
+
+                if (!verify)
+                    return;
+                doffset = 0;
+                _device.Release();
+                _device.OpenReadHandle();
+                UpdateStatus(string.Format("Verifying data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
+                for (var sector = startSector; sector < lastsector; )
+                {
+                    if (_abort)
+                        return;
+                    SetBufSize(sector, lastsector);
                     UpdateMMCProgress(sector + lastsector, maxSector, _sectorSize, _bufsize);
                     var buf = new byte[_bufsize];
-                    var read = stream.Read(buf, 0, buf.Length);
-                    if(read != _bufsize)
+                    var read = _device.ReadFromDevice(ref buf, sector * _sectorSize);
+                    if (read != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
-                    if(!CompareByteArrays(ref buf, ref data, (int) doffset))
+                    if (!CompareByteArrays(ref buf, ref data, (int)doffset))
                         SendError(string.Format("Verification failed somewhere between Sector: 0x{0:X} and 0x{1:X}", sector - (_bufsize / _sectorSize), sector));
                     doffset += read;
                     sector += read / _sectorSize;
                 }
+
+                #endregion Verification
             }
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-                stream.Close();
                 if(_device != null)
                     _device.Release();
             }
         }
 
         public void Write(string file, long startSector = 0, long sectorCount = 0, bool verify = true) {
-            throw new NotImplementedException();
+            _sw = Stopwatch.StartNew();
+            CheckDeviceState();
+            CheckSizeArgs(startSector, ref sectorCount);
+            _device.OpenWriteHandle();
+            var br = OpenReader(file);
+            try
+            {
+                var lastsector = startSector + sectorCount;
+                var maxSector = lastsector;
+                if (verify)
+                    maxSector += lastsector;
+                UpdateStatus(string.Format("Writing data to MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
+                SetBufSize(startSector, lastsector);
+                Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
+                for (var sector = startSector; sector < lastsector; )
+                {
+                    if (_abort)
+                        return;
+                    SetBufSize(sector, lastsector);
+                    UpdateMMCProgress(sector, maxSector, _sectorSize, _bufsize);
+                    var data = br.ReadBytes(_bufsize);
+                    _device.WriteToDevice(ref data, sector * _sectorSize);
+                    sector += _bufsize / _sectorSize;
+                }
+
+                #region Verification
+
+                if (verify)
+                    throw new NotImplementedException();
+
+                #endregion Verification
+            }
+            finally
+            {
+                _sw.Stop();
+                UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
+                if (br != null)
+                    br.Close();
+                if (_device != null)
+                    _device.Release();
+            }
         }
 
         public void WriteEX(byte[] data, long offset = 0, long length = 0, bool verify = true) {
@@ -227,10 +251,8 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length, data.Length);
             _device.OpenWriteHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Write);
-            long doffset = 0;
+            var doffset = 0;
             try {
-                SeekFStream(ref stream, offset);
                 var end = offset + length;
                 var maxLen = end;
                 if(verify)
@@ -242,18 +264,18 @@ namespace x360NANDManager.MMC {
                         return;
                     SetBufSize(current, end);
                     UpdateMMCProgressEX(current, maxLen, _bufsize);
-                    stream.Write(data, (int) doffset, (int) _bufsize);
+                    _device.WriteToDevice(ref data, current, doffset, _bufsize);
                     doffset += _bufsize;
                     current += _bufsize;
                 }
+
+                #region Verification
+
                 if(!verify)
                     return;
                 doffset = 0;
-                stream.Close();
                 _device.Release();
                 _device.OpenReadHandle();
-                stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
-                SeekFStream(ref stream, offset);
                 UpdateStatus(string.Format("Verifying data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 for(var current = offset; current < end;) {
                     if(_abort)
@@ -261,19 +283,19 @@ namespace x360NANDManager.MMC {
                     SetBufSize(current, end);
                     UpdateMMCProgressEX(current + end, maxLen, _bufsize);
                     var buf = new byte[_bufsize];
-                    if(stream.Read(buf, 0, buf.Length) != _bufsize)
+                    if(_device.ReadFromDevice(ref buf, current) != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
-                    if(!CompareByteArrays(ref buf, ref data, (int) doffset))
+                    if(!CompareByteArrays(ref buf, ref data, doffset))
                         SendError(string.Format("Verification failed somewhere between Offset: 0x{0:X} and 0x{1:X}", current - _bufsize, current));
                     doffset += _bufsize;
                     current += _bufsize;
                 }
+
+                #endregion Verification
             }
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -284,10 +306,8 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length, new FileInfo(file).Length);
             _device.OpenWriteHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Write);
             var br = OpenReader(file);
             try {
-                SeekFStream(ref stream, offset);
                 var end = offset + length;
                 var maxLen = end;
                 if(verify)
@@ -298,22 +318,25 @@ namespace x360NANDManager.MMC {
                 for(var current = offset; current < end;) {
                     if(_abort)
                         return;
-                    SetBufSize(stream.Position, end);
-                    UpdateMMCProgressEX(stream.Position, maxLen, _bufsize);
-                    var data = br.ReadBytes((int) _bufsize);
-                    stream.Write(data, 0, data.Length);
+                    SetBufSize(current, end);
+                    UpdateMMCProgressEX(current, maxLen, _bufsize);
+                    var data = br.ReadBytes(_bufsize);
+                    _device.WriteToDevice(ref data, current);
                     current += data.Length;
                 }
-                if (verify)
+
+                #region Verification
+
+                if(verify)
                     throw new NotImplementedException();
+
+                #endregion Verification
             }
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
                 if(br != null)
                     br.Close();
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -324,20 +347,18 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
             _device.OpenReadHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
             var data = new List<byte>();
             try {
-                SeekFStream(ref stream, startSector * _sectorSize);
                 var lastsector = startSector + sectorCount;
                 UpdateStatus(string.Format("Reading data from MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
-                for (var sector = startSector; sector < lastsector;) {
+                for(var sector = startSector; sector < lastsector;) {
                     if(_abort)
                         return data.ToArray();
                     SetBufSize(sector, lastsector);
-                    UpdateMMCProgress(stream.Position / _sectorSize, lastsector, _sectorSize, _bufsize);
+                    UpdateMMCProgress(sector, lastsector, _sectorSize, _bufsize);
                     var buf = new byte[_bufsize];
-                    var read = stream.Read(buf, 0, buf.Length);
+                    var read = _device.ReadFromDevice(ref buf, sector * _sectorSize);
                     if(read != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
                     data.AddRange(buf);
@@ -348,8 +369,6 @@ namespace x360NANDManager.MMC {
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -362,26 +381,23 @@ namespace x360NANDManager.MMC {
             _device.OpenReadHandle();
             if(GetTotalFreeSpace(file) < sectorCount * _sectorSize)
                 throw new Exception("Not enough space for the dump!");
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
             var bw = OpenWriter(file);
             try {
-                SeekFStream(ref stream, startSector * _sectorSize);
                 var lastsector = startSector + sectorCount;
                 UpdateStatus(string.Format("Reading data from MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 UpdateStatus(string.Format("Saving data to: {0}", file));
                 SetBufSize(startSector, lastsector);
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
-                for (var sector = startSector; sector < lastsector; )
-                {
+                for(var sector = startSector; sector < lastsector;) {
                     if(_abort)
                         return;
                     SetBufSize(sector, lastsector);
                     UpdateMMCProgress(sector, lastsector, _sectorSize, _bufsize);
                     var buf = new byte[_bufsize];
-                    var read = stream.Read(buf, 0, buf.Length);
-                    bw.Write(buf, 0, read);
+                    var read = _device.ReadFromDevice(ref buf, sector * _sectorSize);
                     if(read != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
+                    bw.Write(buf);
                     sector += read / _sectorSize;
                 }
             }
@@ -390,8 +406,6 @@ namespace x360NANDManager.MMC {
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
                 if(bw != null)
                     bw.Close();
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -420,20 +434,18 @@ namespace x360NANDManager.MMC {
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length);
             _device.OpenReadHandle();
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
             var data = new List<byte>();
             try {
-                SeekFStream(ref stream, offset);
                 var end = offset + length;
                 UpdateStatus(string.Format("Reading data from MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, length));
                 for(var current = offset; current < end;) {
                     if(_abort)
                         return data.ToArray();
-                    SetBufSizeEX(stream.Position, end);
-                    UpdateMMCProgressEX(stream.Position, end, _bufsize);
+                    SetBufSizeEX(current, end);
+                    UpdateMMCProgressEX(current, end, _bufsize);
                     var buf = new byte[_bufsize];
-                    if(stream.Read(buf, 0, buf.Length) != _bufsize)
+                    if(_device.ReadFromDevice(ref buf, current) != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
                     data.AddRange(buf);
                     current += buf.Length;
@@ -443,8 +455,6 @@ namespace x360NANDManager.MMC {
             finally {
                 _sw.Stop();
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -457,22 +467,21 @@ namespace x360NANDManager.MMC {
             _device.OpenReadHandle();
             if(GetTotalFreeSpace(file) < length)
                 throw new Exception("Not enough space for the dump!");
-            var stream = new FileStream(_device.DeviceHandle, FileAccess.Read);
             var bw = OpenWriter(file);
             try {
-                SeekFStream(ref stream, offset);
                 var end = offset + length;
                 UpdateStatus(string.Format("Reading data from MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Dump Size: 0x{2:X}", _bufsize, _sectorSize, length));
                 for(var current = offset; current < end;) {
                     if(_abort)
                         return;
-                    SetBufSizeEX(stream.Position, end);
-                    UpdateMMCProgressEX(stream.Position, end, _bufsize);
+                    SetBufSizeEX(current, end);
+                    UpdateMMCProgressEX(current, end, _bufsize);
                     var buf = new byte[_bufsize];
-                    if(stream.Read(buf, 0, buf.Length) != _bufsize)
+                    if(_device.ReadFromDevice(ref buf, current) != _bufsize)
                         throw new Exception("Something went wrong with the read operation!");
-                    bw.Write(buf, 0, buf.Length);
+                    bw.Write(buf);
+                    current += buf.Length;
                 }
             }
             finally {
@@ -480,8 +489,6 @@ namespace x360NANDManager.MMC {
                 UpdateStatus(string.Format((_abort ? "Aborted after: {0:F0} Minutes {1:F0} Seconds" : "Completed after: {0:F0} Minutes {1:F0} Seconds"), _sw.Elapsed.TotalMinutes, _sw.Elapsed.Seconds));
                 if(bw != null)
                     bw.Close();
-                if(stream != null)
-                    stream.Close();
                 if(_device != null)
                     _device.Release();
             }
@@ -528,10 +535,10 @@ namespace x360NANDManager.MMC {
                 }
                 catch(Exception ex) {
                     var dex = ex as X360NANDManagerException;
-                    if (dex != null && (dex.Win32ErrorNumber == 32 || dex.Win32ErrorNumber == 0 /* Success, not an error?! */ || dex.Win32ErrorNumber == 21/* Device not ready... ignore it... */))
+                    if(dex != null && (dex.Win32ErrorNumber == 32 || dex.Win32ErrorNumber == 0 /* Success, not an error?! */|| dex.Win32ErrorNumber == 21 /* Device not ready... ignore it... */))
                         continue;
                     var wex = ex as Win32Exception;
-                    if (wex != null && wex.NativeErrorCode == 21) //Device not ready, Win32 Error outside of my own error handling...
+                    if(wex != null && wex.NativeErrorCode == 21) //Device not ready, Win32 Error outside of my own error handling...
                         continue;
                     throw;
                 }
@@ -542,6 +549,6 @@ namespace x360NANDManager.MMC {
             return ret;
         }
 
-        #endregion Implementation of IMMCFlasher
+        #endregion
     }
 }

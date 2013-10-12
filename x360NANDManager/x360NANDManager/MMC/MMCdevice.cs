@@ -5,7 +5,8 @@ namespace x360NANDManager.MMC {
     using Microsoft.Win32.SafeHandles;
 
     public sealed class MMCDevice : Utils, IDisposable {
-        internal SafeFileHandle DeviceHandle;
+        private SafeFileHandle _deviceHandle;
+        private FileStream _fileStream;
 
         internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometryEX geometry) {
             DisplayName = displayName;
@@ -22,9 +23,7 @@ namespace x360NANDManager.MMC {
         ///   Gets Disk Size based on DiskGeometry
         /// </summary>
         public long Size {
-            get {
-                return (long) DiskGeometryEX.DiskSize;
-            }
+            get { return (long) DiskGeometryEX.DiskSize; }
         }
 
         /// <summary>
@@ -58,6 +57,15 @@ namespace x360NANDManager.MMC {
 
         #endregion
 
+        private void SeekFSStream(long offset) {
+            if(_fileStream.Position == offset)
+                return; // No need to seek, we're already where we want to be...
+            if (_fileStream.CanSeek)
+                _fileStream.Seek(offset, SeekOrigin.Begin);
+            else
+                throw new Exception("Unable to seek!");
+        }
+
         ~MMCDevice() {
             try {
                 Release();
@@ -79,14 +87,15 @@ namespace x360NANDManager.MMC {
         /// </summary>
         internal void OpenReadHandle() {
             Main.SendDebug("Opening Device Read Handle");
-            if(DeviceHandle != null && !DeviceHandle.IsInvalid)
+            if(_deviceHandle != null && !_deviceHandle.IsInvalid)
                 Release();
             if(!NativeWin32.LockDevice(Path))
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
             Main.SendDebug("Device locked... opening the handle now!");
-            DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Read);
+            _deviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Read, FileShare.Read);
             Main.SendDebug("Device opened!");
+            _fileStream = new FileStream(_deviceHandle, FileAccess.Read);
         }
 
         /// <summary>
@@ -94,31 +103,48 @@ namespace x360NANDManager.MMC {
         /// </summary>
         internal void OpenWriteHandle() {
             Main.SendDebug("Opening Device Write Handle");
-            if(DeviceHandle != null && !DeviceHandle.IsInvalid)
+            if(_deviceHandle != null && !_deviceHandle.IsInvalid)
                 Release();
             if(!NativeWin32.LockDevice(Path))
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
             Main.SendDebug("Device locked... opening the handle now!");
-            DeviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Write, FileShare.None);
+            _deviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Write, FileShare.None);
             Main.SendDebug("Device opened!");
+            _fileStream = new FileStream(_deviceHandle, FileAccess.Write);
         }
 
         /// <summary>
         ///   Release the device
         /// </summary>
         internal void Release() {
-            if(DeviceHandle != null && !DeviceHandle.IsInvalid)
-                DeviceHandle.Close();
+            if(_deviceHandle != null && !_deviceHandle.IsInvalid)
+                _deviceHandle.Close();
+            if(_fileStream != null)
+                _fileStream.Close();
             try {
                 Main.SendDebug("Unlocking device...");
                 NativeWin32.UnLockDevice(Path);
             }
             catch(Win32Exception ex) {
-                if (ex.NativeErrorCode != 158) // Already unlocked, not really an error...
+                if(ex.NativeErrorCode != 158) // Already unlocked, not really an error...
                     throw;
             }
             IsLocked = false;
+        }
+
+        internal void WriteToDevice(ref byte[] buffer, long offset, int index = 0, int count = -1) {
+            SeekFSStream(offset);
+            if(count <= 0)
+                count = buffer.Length;
+            _fileStream.Write(buffer, index, count);
+        }
+
+        internal int ReadFromDevice(ref byte[] buffer, long offset, int index = 0, int count = -1) {
+            SeekFSStream(offset);
+            if(count <= 0)
+                count = buffer.Length;
+            return _fileStream.Read(buffer, index, count);
         }
     }
 }

@@ -51,7 +51,8 @@ namespace x360NANDManager.MMC {
             try {
                 Release();
             }
-            catch {
+            catch (Exception ex) {
+                Main.SendDebug(ex.ToString());
             }
         }
 
@@ -70,7 +71,8 @@ namespace x360NANDManager.MMC {
             try {
                 Release();
             }
-            catch {
+            catch (Exception ex) {
+                Main.SendDebug(ex.ToString());
             }
         }
 
@@ -109,9 +111,9 @@ namespace x360NANDManager.MMC {
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
             Main.SendDebug("Device locked... opening the handle now!");
-            _deviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.Write, FileShare.None);
+            _deviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.ReadWrite, FileShare.ReadWrite);
             Main.SendDebug("Device opened!");
-            _fileStream = new FileStream(_deviceHandle, FileAccess.Write);
+            _fileStream = new FileStream(_deviceHandle, FileAccess.ReadWrite);
         }
 
         /// <summary>

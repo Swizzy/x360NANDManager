@@ -63,14 +63,14 @@
             DeviceLockFailed,
 
             /// <summary>
-            ///   Unable to unlock device from exclusive access(MMC ERROR)
-            /// </summary>
-            DeviceUnLockFailed,
-
-            /// <summary>
             ///   Device is not compatible with the requested feature
             /// </summary>
             IncompatibleDevice,
+
+            /// <summary>
+            /// Device Write operation failed (MMC Error)
+            /// </summary>
+            WriteFailed,
         }
 
         #endregion

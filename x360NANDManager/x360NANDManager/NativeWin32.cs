@@ -18,7 +18,7 @@
             DIGCFDeviceinterface = 0x00000010,
         }
 
-        #endregion Nested type: DIGCF
+        #endregion
 
         #region Nested type: IOCTL
 
@@ -53,10 +53,9 @@
 
         [StructLayout(LayoutKind.Sequential)] public struct DiskGeometryEX {
             public readonly DiskGeometry Geometry;
-            public readonly  ulong DiskSize;
+            public readonly ulong DiskSize;
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public readonly byte[] Data;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)] public readonly byte[] Data;
         }
 
         #endregion
@@ -154,6 +153,10 @@
 
         [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)] internal static extern bool DeviceIoControl(SafeFileHandle hDevice, int dwIoControlCode, IntPtr lpInBuffer, int nInBufferSize, IntPtr lpOutBuffer, int nOutBufferSize, out int lpBytesReturned, IntPtr lpOverlapped);
 
+        [DllImport("kernel32.dll", SetLastError = true)] internal static extern bool ReadFile(SafeFileHandle hFile, [Out] byte[] lpBuffer, uint nNumberOfBytesToRead, out uint lpNumberOfBytesRead, IntPtr lpOverlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)] internal static extern bool WriteFile(SafeFileHandle hFile, byte[] lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, IntPtr lpOverlapped);
+
         #endregion Kernel32
 
         #region Functions
@@ -204,12 +207,16 @@
             var deviceNumber = GetDeviceNumber(device);
             foreach(var drive in DriveInfo.GetDrives()) {
                 try {
-                    var num = GetDeviceNumber(drive.Name);
-                    if(num != deviceNumber)
+                    if(drive.DriveType != DriveType.Network && drive.DriveType != DriveType.CDRom) {
+                        var num = GetDeviceNumber(drive.Name);
+                        if(num != deviceNumber)
+                            continue;
+                    }
+                    else
                         continue;
                 }
-                catch (Win32Exception ex) {
-                    if (ex.NativeErrorCode != 5)
+                catch(Win32Exception ex) {
+                    if(ex.NativeErrorCode != 5)
                         throw;
                     continue;
                 }
@@ -234,15 +241,17 @@
             Main.SendDebug(string.Format("Unlocking: {0}", device));
             var deviceNumber = GetDeviceNumber(device);
             foreach(var drive in DriveInfo.GetDrives()) {
-                try
-                {
-                    var num = GetDeviceNumber(drive.Name);
-                    if (num != deviceNumber)
+                try {
+                    if(drive.DriveType != DriveType.Network && drive.DriveType != DriveType.CDRom) {
+                        var num = GetDeviceNumber(drive.Name);
+                        if(num != deviceNumber)
+                            continue;
+                    }
+                    else
                         continue;
                 }
-                catch (Win32Exception ex)
-                {
-                    if (ex.NativeErrorCode != 5)
+                catch(Win32Exception ex) {
+                    if(ex.NativeErrorCode != 5)
                         throw;
                     continue;
                 }
@@ -251,7 +260,7 @@
                     int outsize;
                     if(!DeviceIoControl(handle, (int) IOCTL.UnlockVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero)) {
                         var err = Marshal.GetLastWin32Error();
-                        if (err != 158) // Device already unlocked, ok... skip it?!
+                        if(err != 158) // Device already unlocked, ok... skip it?!
                             throw new Win32Exception(err);
                         Main.SendDebug(string.Format("{0} Is Already Unlocked!", drive.Name));
                     }
@@ -281,9 +290,7 @@
                             continue;
                         var devinfodata = new SpDevinfoData();
                         devinfodata.cbSize = (uint) Marshal.SizeOf(devinfodata);
-                        var devinterfacedetaildata = new SpDeviceInterfaceDetailData {
-                                                                                     cbSize = IntPtr.Size == 8 ? 8 : (uint) (4 + Marshal.SystemDefaultCharSize)
-                                                                                     };
+                        var devinterfacedetaildata = new SpDeviceInterfaceDetailData { cbSize = IntPtr.Size == 8 ? 8 : (uint) (4 + Marshal.SystemDefaultCharSize) };
                         uint nRequiredSize = 0;
                         if(!SetupDiGetDeviceInterfaceDetail(handle, ref devinterfacedata, ref devinterfacedetaildata, 1000, ref nRequiredSize, ref devinfodata))
                             SetupDiGetDeviceInterfaceDetail(handle, ref devinterfacedata, ref devinterfacedetaildata, nRequiredSize, ref nRequiredSize, ref devinfodata);

@@ -139,6 +139,7 @@ namespace x360NANDManager.MMC {
             SeekFSStream(offset);
             if(count <= 0)
                 count = buffer.Length;
+            Main.SendDebug("Writing 0x{0:X} bytes to the device @ offset 0x{1:X} index in the buf: 0x{2:X}", count, offset, index);
             _fileStream.Write(buffer, index, count);
         }
 
@@ -146,6 +147,7 @@ namespace x360NANDManager.MMC {
             SeekFSStream(offset);
             if(count <= 0)
                 count = buffer.Length;
+            Main.SendDebug("Reading 0x{0:X} bytes from the device @ offset 0x{1:X} index in the buf: 0x{2:X}", count, offset, index);
             return _fileStream.Read(buffer, index, count);
         }
     }

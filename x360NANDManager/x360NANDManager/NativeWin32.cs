@@ -157,6 +157,8 @@
 
         [DllImport("kernel32.dll", SetLastError = true)] internal static extern bool WriteFile(SafeFileHandle hFile, byte[] lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, IntPtr lpOverlapped);
 
+        [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] internal static extern uint SetFilePointer(SafeFileHandle hFile, int lDistanceToMove, out int lpDistanceToMoveHigh, uint dwMoveMethod);
+
         #endregion Kernel32
 
         #region Functions
@@ -405,6 +407,19 @@
             }
             finally {
                 Marshal.FreeHGlobal(bufPtr);
+            }
+        }
+
+        internal static uint SeekOriginToMoveMethod(SeekOrigin origin) {
+            switch(origin) {
+                case SeekOrigin.Begin:
+                    return 0;
+                case SeekOrigin.Current:
+                    return 1;
+                case SeekOrigin.End:
+                    return 2;
+                default:
+                    throw new ArgumentOutOfRangeException("origin");
             }
         }
 

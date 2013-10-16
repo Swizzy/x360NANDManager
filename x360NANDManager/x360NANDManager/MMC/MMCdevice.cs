@@ -58,14 +58,20 @@ namespace x360NANDManager.MMC {
 
         #endregion
 
-        //private void SeekFSStream(long offset) {
-        //    if(_fileStream.Position == offset)
-        //        return; // No need to seek, we're already where we want to be...
-        //    if (_fileStream.CanSeek)
-        //        _fileStream.Seek(offset, SeekOrigin.Begin);
-        //    else
-        //        throw new Exception("Unable to seek!");
-        //}
+        private void SeekFSStream(long offset)
+        {
+            //if (_fileStream.Position == offset)
+            //    return; // No need to seek, we're already where we want to be...
+            //if (_fileStream.CanSeek)
+            //    _fileStream.Seek(offset, SeekOrigin.Begin);
+            //else
+            //    throw new Exception("Unable to seek!");
+            var lo = (int)(offset & 0xffffffff);
+            int hi;
+            lo = (int) NativeWin32.SetFilePointer(_deviceHandle, lo, out hi, NativeWin32.SeekOriginToMoveMethod(SeekOrigin.Begin));
+            if (lo == -1)
+                throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.Win32Error);
+        }
 
         ~MMCDevice() {
             try {
@@ -136,10 +142,12 @@ namespace x360NANDManager.MMC {
         }
 
         internal void WriteToDevice(ref byte[] buffer, long offset, int index = 0, int count = -1) {
-            //SeekFSStream(offset);
+            SeekFSStream(offset);
             if(count <= 0)
                 count = buffer.Length;
+#if DEBUG
             Main.SendDebug("Writing 0x{0:X} bytes to the device @ offset 0x{1:X} index in the buf: 0x{2:X}", count, offset, index);
+#endif
             //_fileStream.Write(buffer, index, count);
             uint written;
             bool res;
@@ -158,10 +166,12 @@ namespace x360NANDManager.MMC {
         }
 
         internal int ReadFromDevice(ref byte[] buffer, long offset, int index = 0, int count = -1) {
-            //SeekFSStream(offset);
+            SeekFSStream(offset);
             if(count <= 0)
                 count = buffer.Length;
+#if DEBUG
             Main.SendDebug("Reading 0x{0:X} bytes from the device @ offset 0x{1:X} index in the buf: 0x{2:X}", count, offset, index);
+#endif
             //return _fileStream.Read(buffer, index, count);
             uint readcount;
             bool res;

@@ -105,15 +105,16 @@ namespace x360NANDManager.MMC {
                 UpdateStatus(string.Format("Zeroing data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 SetBufSize(startSector, lastsector);
                 Main.SendDebug(string.Format("Bufsize: 0x{0:X} Sector Size: 0x{1:X} Total Size: 0x{2:X}", _bufsize, _sectorSize, sectorCount * _sectorSize));
-                for(var sector = startSector; sector < lastsector; sector++) {
+                var data = new byte[_bufsize];
+                for(var sector = startSector; sector < lastsector;) {
                     if (_abort)
                         return;
                     SetBufSize(sector, lastsector);
                     UpdateMMCProgress(sector, lastsector, _sectorSize, _bufsize);
-                    var data = new byte[_bufsize];
                     if(sector + (_bufsize / _sectorSize) > lastsector)
                         Array.Resize(ref data, (int) ((lastsector - sector) * _sectorSize));
                     _device.WriteToDevice(ref data, sector * _sectorSize);
+                    sector += _bufsize / _sectorSize;
                 }
             }
             finally {

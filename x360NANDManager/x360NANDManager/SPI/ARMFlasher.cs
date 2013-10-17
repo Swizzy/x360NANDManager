@@ -438,9 +438,11 @@
                     UpdateProgress(block, lastBlock, totalBlocks);
                     EraseBlock(block, verboseLevel);
                 }
-                sw.Stop();
-                UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
-                Reset();
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
+                    Reset();
+                }
             }
 
             #endregion Erase First
@@ -470,8 +472,10 @@
                     if(verify)
                         dataList.AddRange(tmp);
                 }
-                sw.Stop();
-                UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                }
             }
 
             #endregion Write
@@ -497,8 +501,10 @@
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }
-                sw.Stop();
-                UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                }
             }
 
             #endregion Verify
@@ -568,9 +574,11 @@
                     UpdateProgress(block, lastBlock, totalBlocks);
                     EraseBlock(block, verboseLevel);
                 }
-                sw.Stop();
-                UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
-                Reset();
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
+                    Reset();
+                }
             }
 
             #endregion Erase First
@@ -596,8 +604,10 @@
                     if(verify)
                         dataList.AddRange(tmp);
                 }
-                sw.Stop();
-                UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                }
             }
 
             #endregion Write
@@ -623,8 +633,10 @@
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }
-                sw.Stop();
-                UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                if(!AbortRequested) {
+                    sw.Stop();
+                    UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                }
             }
 
             #endregion Verify

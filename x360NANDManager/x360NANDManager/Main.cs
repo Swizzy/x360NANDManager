@@ -9,8 +9,6 @@
     using x360NANDManager.XSVF;
 
     public static class Main {
-        [DllImport("shell32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] internal static extern bool IsUserAnAdmin();
-
         private const string BaseName = "x360NANDManager v{0}.{1} (Build: {2}) {3}";
         private static readonly Version Ver = Assembly.GetExecutingAssembly().GetName().Version;
 
@@ -28,6 +26,8 @@
             }
         }
 
+        [DllImport("shell32.dll", SetLastError = true)] [return : MarshalAs(UnmanagedType.Bool)] internal static extern bool IsUserAnAdmin();
+
         public static ISPIFlasher GetSPIFlasher() {
             if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4))
                 return new ARMFlasher(0xFFFF, 0x4);
@@ -43,14 +43,14 @@
         }
 
         public static IXSVFFlasher GetXSVFFlasher() {
+            if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338)) // Try JRP First...
+                return new JRPXSVFFlasher(0x11D4, 0x8338);
             if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4)) {
                 var flasher = new ARMXSVFFlasher(0xFFFF, 0x4);
                 if(!flasher.IsCompatibleVersion())
                     throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.IncompatibleDevice);
                 return flasher;
             }
-            if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
-                return new JRPXSVFFlasher(0x11D4, 0x8338);
             throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
         }
 
@@ -67,17 +67,14 @@
         }
 
         public static IList<MMCDevice> GetMMCDeviceList(bool onlyRemoveable = true) {
-            if (!IsUserAnAdmin())
+            if(!IsUserAnAdmin())
                 throw new Exception("You must be admin to use this function...");
             return MMCFlasher.GetDevices(onlyRemoveable);
         }
 
         public static event EventHandler<EventArg<string>> Debug;
 
-        [Conditional("DEBUG")]
-        [Conditional("ALPHA")]
-        internal static void SendDebug(string message, params object[] args)
-        {
+        [Conditional("DEBUG")] [Conditional("ALPHA")] internal static void SendDebug(string message, params object[] args) {
             message = args.Length == 0 ? message : string.Format(message, args);
             var dbg = Debug;
             if(dbg != null && message != null)
@@ -110,10 +107,10 @@
 
         #endregion
 
-        public readonly long Start;
         public readonly long End;
+        public readonly long Start;
 
-        private Presets(MMCPresets mmc) {
+        public Presets(MMCPresets mmc) {
             switch(mmc) {
                 case MMCPresets.SystemOnly:
                     Start = 0;
@@ -148,7 +145,7 @@
             }
         }
 
-        private Presets(SPIPresets spi) {
+        public Presets(SPIPresets spi) {
             switch(spi) {
                 case SPIPresets.Auto:
                     Start = 0;

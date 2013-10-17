@@ -38,7 +38,7 @@
             InitializeComponent();
             _isAdmin = Program.IsUserAnAdmin();
             if(!_isAdmin)
-                MessageBox.Show("MMC Functions are disabled... you need to start this program as admin to use them!", "Admin rights are required for MMC functions...", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(Resources.MMCDisabledNeedAdmin, Resources.AdminRequiredForMMC, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             mmc.Enabled = _isAdmin;
 
         }
@@ -242,7 +242,7 @@
 
         private void ReadbtnClick(object sender, EventArgs e) {
             var sfd = new SaveFileDialog {
-                                         FileName = "flashdmp.bin", Title = "Select where to save the dump..."
+                                         FileName = "flashdmp.bin", Title = Resources.SelectDumpLocation
                                          };
             if(sfd.ShowDialog() != DialogResult.OK)
                 return;
@@ -256,7 +256,7 @@
 
         private void WritebtnClick(object sender, EventArgs e) {
             var ofd = new OpenFileDialog {
-                                         FileName = "updflash.bin", Title = "Select File to write"
+                                         FileName = "updflash.bin", Title = Resources.SelectFileToWrite
                                          };
             if(ofd.ShowDialog() != DialogResult.OK)
                 return;
@@ -269,7 +269,7 @@
         }
 
         private void ErasebtnClick(object sender, EventArgs e) {
-            if(MessageBox.Show("Are you sure you want to erase?! you'll lose EVERYTHING!\nIf you do intend to erase Click on NO", "Are you sure?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning) != DialogResult.No)
+            if(MessageBox.Show(Resources.EraseSafetyMessage, Resources.AreYouSure, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning) != DialogResult.No)
                 return;
             outputbox.Text = "";
             var args = new BWArgs(BWArgs.Operations.Erase);
@@ -283,11 +283,11 @@
             SetAppState(false);
             var res = e.Result is bool && (bool) e.Result;
             if(res && !_abort)
-                MessageBox.Show("Operation completed successfully!", "Done!");
+                MessageBox.Show(Resources.OpSuccess, Resources.Done);
             else if(!_abort)
-                MessageBox.Show("Operation completed with errors!", "Done!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(Resources.OpFailed, Resources.Done, MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
-                MessageBox.Show("Operation aborted", "Aborted");
+                MessageBox.Show(Resources.OpAborted, Resources.Aborted);
         }
 
         private void ClearLogClick(object sender, EventArgs e) {
@@ -296,7 +296,7 @@
 
         private void SaveLogClick(object sender, EventArgs e) {
             var sfd = new SaveFileDialog {
-                                         FileName = "x360NANDManager.log", Title = "Select where to save the log", DefaultExt = "log", AddExtension = true, Filter = "Log files|*.log|Text Files|*.txt|All Files|*.*"
+                                         FileName = "x360NANDManager.log", Title = Resources.SelectLogLocation, DefaultExt = "log", AddExtension = true, Filter = Resources.LogFilter
                                          };
             if(sfd.ShowDialog() == DialogResult.OK)
                 File.WriteAllLines(sfd.FileName, outputbox.Lines);
@@ -315,11 +315,13 @@
             mmccountbox.Enabled = mmc.Checked;
             mmcdevice.Enabled = mmc.Checked;
             mmclbl.Enabled = mmc.Checked;
+
             spiblockbox.Enabled = !mmc.Checked;
             spicountbox.Enabled = !mmc.Checked;
             rawbox.Enabled = !mmc.Checked;
             addSpareBox.Enabled = !mmc.Checked;
             correctSpareBox.Enabled = !mmc.Checked;
+            eraseBox.Enabled = !mmc.Checked;
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
@@ -338,7 +340,7 @@
 
         private void XsvfbtnClick(object sender, EventArgs e) {
             var ofd = new OpenFileDialog {
-                                         FileName = "xc2c64a.xsvf", Title = "Select File to write"
+                                         FileName = "xc2c64a.xsvf", Title = Resources.SelectFileToWrite
                                          };
             if(ofd.ShowDialog() != DialogResult.OK)
                 return;

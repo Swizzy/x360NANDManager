@@ -117,4 +117,44 @@
   <data name="IncompatibleXSVF">
     <value xml:space="preserve">ERROR: Device is not compatible with XSVF Flashing!</value>
   </data>
+  <data name="MMCDisabledNeedAdmin" xml:space="preserve">
+    <value>MMC Functions are disabled... you need to start this program as admin to use them!</value>
+  </data>
+  <data name="AdminRequiredForMMC" xml:space="preserve">
+    <value>Admin rights are required for MMC functions...</value>
+  </data>
+  <data name="SelectDumpLocation" xml:space="preserve">
+    <value>Select where to save the dump...</value>
+  </data>
+  <data name="SelectFileToWrite" xml:space="preserve">
+    <value>Select File to write</value>
+  </data>
+  <data name="EraseSafetyMessage" xml:space="preserve">
+    <value>Are you sure you want to erase?! you'll lose EVERYTHING!
+If you do intend to erase Click on NO</value>
+  </data>
+  <data name="AreYouSure" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="OpSuccess" xml:space="preserve">
+    <value>Operation completed successfully!</value>
+  </data>
+  <data name="OpFailed" xml:space="preserve">
+    <value>Operation completed with errors!</value>
+  </data>
+  <data name="OpAborted" xml:space="preserve">
+    <value>Operation aborted</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>Done!</value>
+  </data>
+  <data name="Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
+  <data name="SelectLogLocation" xml:space="preserve">
+    <value>Select where to save the log</value>
+  </data>
+  <data name="LogFilter" xml:space="preserve">
+    <value>Log files|*.log|Text Files|*.txt|All Files|*.*</value>
+  </data>
 </root>

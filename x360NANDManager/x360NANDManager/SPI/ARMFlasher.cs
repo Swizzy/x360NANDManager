@@ -339,12 +339,12 @@
                 UpdateProgress(block, last);
                 EraseBlock(block, verboseLevel);
             }
+            DeInit();
+            Release();
             if(AbortRequested)
                 return;
             sw.Stop();
             UpdateStatus(string.Format("Erase completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
-            DeInit();
-            Release();
         }
 
         /// <summary>

@@ -235,8 +235,27 @@ namespace x360NANDManager.MMC {
 
                 #region Verification
 
-                if (verify)
-                    throw new NotImplementedException();
+                if (!verify)
+                    return;
+                _device.Release();
+                _device.OpenReadHandle();
+                br.BaseStream.Seek(0, SeekOrigin.Begin);
+                UpdateStatus(string.Format("Verifying data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
+                for (var sector = startSector; sector < lastsector; )
+                {
+                    if (_abort)
+                        return;
+                    SetBufSize(sector, lastsector);
+                    UpdateMMCProgress(sector + lastsector, maxSector, _sectorSize, _bufsize);
+                    var buf = new byte[_bufsize];
+                    var read = _device.ReadFromDevice(ref buf, sector * _sectorSize);
+                    if (read != _bufsize)
+                        throw new Exception("Something went wrong with the read operation!");
+                    var tmp = br.ReadBytes(_bufsize);
+                    if (!CompareByteArrays(ref buf, ref tmp))
+                        SendError(string.Format("Verification failed somewhere between Sector: 0x{0:X} and 0x{1:X}", sector - (_bufsize / _sectorSize), sector));
+                    sector += read / _sectorSize;
+                }
 
                 #endregion Verification
             }
@@ -332,8 +351,26 @@ namespace x360NANDManager.MMC {
 
                 #region Verification
 
-                if(verify)
-                    throw new NotImplementedException();
+                if (!verify)
+                return;
+                _device.Release();
+                _device.OpenReadHandle();
+                br.BaseStream.Seek(0, SeekOrigin.Begin);
+                UpdateStatus(string.Format("Verifying data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
+                for (var current = offset; current < end; )
+                {
+                    if (_abort)
+                        return;
+                    SetBufSize(current, end);
+                    UpdateMMCProgressEX(current + end, maxLen, _bufsize);
+                    var buf = new byte[_bufsize];
+                    if (_device.ReadFromDevice(ref buf, current) != _bufsize)
+                        throw new Exception("Something went wrong with the read operation!");
+                    var tmp = br.ReadBytes(_bufsize);
+                    if (!CompareByteArrays(ref buf, ref tmp))
+                        SendError(string.Format("Verification failed somewhere between Offset: 0x{0:X} and 0x{1:X}", current - _bufsize, current));
+                    current += _bufsize;
+                }
 
                 #endregion Verification
             }

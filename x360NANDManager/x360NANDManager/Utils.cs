@@ -74,7 +74,7 @@
             return newlist.ToArray();
         }
 
-        public bool CompareByteArrays(byte[] buf, byte[] buf2) {
+        public bool CompareByteArrays(ref byte[] buf, ref byte[] buf2) {
             if(buf == buf2)
                 return true;
             if(buf == null || buf2 == null || buf.Length != buf2.Length)

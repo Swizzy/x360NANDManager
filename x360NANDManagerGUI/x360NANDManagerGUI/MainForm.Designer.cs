@@ -38,6 +38,7 @@
             this.progress = new System.Windows.Forms.ProgressBar();
             this.erasebtn = new System.Windows.Forms.Button();
             this.optionsbox = new System.Windows.Forms.GroupBox();
+            this.nandMMCStyle = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.spiblockbox = new System.Windows.Forms.NumericUpDown();
             this.mmccountbox = new System.Windows.Forms.NumericUpDown();
@@ -163,6 +164,7 @@
             // 
             // optionsbox
             // 
+            this.optionsbox.Controls.Add(this.nandMMCStyle);
             this.optionsbox.Controls.Add(this.label3);
             this.optionsbox.Controls.Add(this.spiblockbox);
             this.optionsbox.Controls.Add(this.mmccountbox);
@@ -187,6 +189,17 @@
             this.optionsbox.TabIndex = 3;
             this.optionsbox.TabStop = false;
             this.optionsbox.Text = "Options";
+            // 
+            // nandMMCStyle
+            // 
+            this.nandMMCStyle.AutoSize = true;
+            this.nandMMCStyle.Enabled = false;
+            this.nandMMCStyle.Location = new System.Drawing.Point(293, 21);
+            this.nandMMCStyle.Name = "nandMMCStyle";
+            this.nandMMCStyle.Size = new System.Drawing.Size(101, 17);
+            this.nandMMCStyle.TabIndex = 11;
+            this.nandMMCStyle.Text = "nandMMC Style";
+            this.nandMMCStyle.UseVisualStyleBackColor = true;
             // 
             // label3
             // 
@@ -577,6 +590,7 @@
         private System.Windows.Forms.Button xsvfbtn;
         private System.Windows.Forms.StatusStrip statusStrip2;
         private System.Windows.Forms.ToolStripStatusLabel statuslbl;
+        private System.Windows.Forms.CheckBox nandMMCStyle;
     }
 }
 

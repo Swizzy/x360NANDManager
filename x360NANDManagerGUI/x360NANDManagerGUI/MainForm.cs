@@ -315,6 +315,7 @@
             mmccountbox.Enabled = mmc.Checked;
             mmcdevice.Enabled = mmc.Checked;
             mmclbl.Enabled = mmc.Checked;
+            nandMMCStyle.Enabled = mmc.Checked;
 
             spiblockbox.Enabled = !mmc.Checked;
             spicountbox.Enabled = !mmc.Checked;
@@ -376,8 +377,11 @@
                     }
                     Device = Devices.None;
                 }
-                if (Program.MainForm.mmcdevice.SelectedItem != null)
+                if(Program.MainForm.mmcdevice.SelectedItem != null) {
                     MMCDevice = Program.MainForm.mmcdevice.SelectedItem as MMCDevice;
+                    if(MMCDevice != null)
+                        MMCDevice.NANDMMCStyle = Program.MainForm.nandMMCStyle.Checked;
+                }
                 Verify = Program.MainForm.verifyBox.Checked;
                 EraseFirst = Program.MainForm.eraseBox.Checked;
                 AddSpare = Program.MainForm.addSpareBox.Checked;

@@ -35,7 +35,6 @@ namespace x360NANDManager.MMC {
                 SetBufSize();
         }
 
-
         private void CheckDeviceState() {
             if(_device == null)
                 throw new NullReferenceException("_device");
@@ -99,7 +98,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             try {
                 var lastsector = startSector + sectorCount;
                 UpdateStatus(string.Format("Zeroing data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
@@ -128,7 +127,7 @@ namespace x360NANDManager.MMC {
         public void ZeroDataEX(long offset = 0, long length = 0) {
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             var end = offset + length;
             try {
                 UpdateStatus(string.Format("Zeroing data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
@@ -153,7 +152,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount, data.Length);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             long doffset = 0;
             try {
                 var lastsector = startSector + sectorCount;
@@ -179,7 +178,7 @@ namespace x360NANDManager.MMC {
                     return;
                 doffset = 0;
                 _device.Release();
-                _device.OpenReadHandle();
+                _device.OpenHandle();
                 UpdateStatus(string.Format("Verifying data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 for (var sector = startSector; sector < lastsector; )
                 {
@@ -211,7 +210,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             var br = OpenReader(file);
             try
             {
@@ -237,8 +236,6 @@ namespace x360NANDManager.MMC {
 
                 if (!verify)
                     return;
-                _device.Release();
-                _device.OpenReadHandle();
                 br.BaseStream.Seek(0, SeekOrigin.Begin);
                 UpdateStatus(string.Format("Verifying data on MMC Sectors: 0x{0:X} to 0x{1:X}", startSector, lastsector));
                 for (var sector = startSector; sector < lastsector; )
@@ -274,7 +271,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length, data.Length);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             var doffset = 0;
             try {
                 var end = offset + length;
@@ -298,8 +295,6 @@ namespace x360NANDManager.MMC {
                 if(!verify)
                     return;
                 doffset = 0;
-                _device.Release();
-                _device.OpenReadHandle();
                 UpdateStatus(string.Format("Verifying data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 for(var current = offset; current < end;) {
                     if(_abort)
@@ -329,7 +324,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length, new FileInfo(file).Length);
-            _device.OpenWriteHandle();
+            _device.OpenHandle();
             var br = OpenReader(file);
             try {
                 var end = offset + length;
@@ -353,8 +348,6 @@ namespace x360NANDManager.MMC {
 
                 if (!verify)
                 return;
-                _device.Release();
-                _device.OpenReadHandle();
                 br.BaseStream.Seek(0, SeekOrigin.Begin);
                 UpdateStatus(string.Format("Verifying data on MMC Offset: 0x{0:X} to 0x{1:X}", offset, end));
                 for (var current = offset; current < end; )
@@ -388,7 +381,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
-            _device.OpenReadHandle();
+            _device.OpenHandle();
             var data = new List<byte>();
             try {
                 var lastsector = startSector + sectorCount;
@@ -420,7 +413,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgs(startSector, ref sectorCount);
-            _device.OpenReadHandle();
+            _device.OpenHandle();
             if(GetTotalFreeSpace(file) < sectorCount * _sectorSize)
                 throw new Exception("Not enough space for the dump!");
             var bw = OpenWriter(file);
@@ -475,7 +468,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length);
-            _device.OpenReadHandle();
+            _device.OpenHandle();
             var data = new List<byte>();
             try {
                 var end = offset + length;
@@ -506,7 +499,7 @@ namespace x360NANDManager.MMC {
             _sw = Stopwatch.StartNew();
             CheckDeviceState();
             CheckSizeArgsEX(offset, ref length);
-            _device.OpenReadHandle();
+            _device.OpenHandle();
             if(GetTotalFreeSpace(file) < length)
                 throw new Exception("Not enough space for the dump!");
             var bw = OpenWriter(file);

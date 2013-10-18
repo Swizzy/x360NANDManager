@@ -1,0 +1,4 @@
+- Add a way to select between multipile USB Devices for SPI Flasher (ARM/PIC and JRP)
+- FTDI SPI Flasher
+- FTDI SVF/XSVF Player
+- Fix any bugs

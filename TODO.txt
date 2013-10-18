@@ -2,3 +2,5 @@
 - FTDI SPI Flasher
 - FTDI SVF/XSVF Player
 - Fix any bugs
+- Add Auto-Remap write for the SPI Flasher
+- Add Multi read to the GUI

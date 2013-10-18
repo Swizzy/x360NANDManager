@@ -75,8 +75,8 @@ namespace x360NANDManager.MMC {
             }
             else {
                 var lo = (int) (offset & 0xffffffff);
-                int hi;
-                lo = (int) NativeWin32.SetFilePointer(_deviceHandle, lo, out hi, NativeWin32.SeekOriginToMoveMethod(SeekOrigin.Begin));
+                var hi = (int) (offset << 32);
+                lo = (int) NativeWin32.SetFilePointer(_deviceHandle, lo, ref hi, NativeWin32.SeekOriginToMoveMethod(SeekOrigin.Begin));
                 if(lo == -1)
                     throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.Win32Error);
             }

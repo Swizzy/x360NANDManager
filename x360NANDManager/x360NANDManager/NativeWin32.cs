@@ -160,7 +160,7 @@
         internal static extern bool WriteFile(SafeFileHandle hFile, byte[] lpBuffer, uint nNumberOfBytesToWrite, out uint lpNumberOfBytesWritten, IntPtr lpOverlapped);
 
         [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern uint SetFilePointer(SafeFileHandle hFile, int lDistanceToMove, out int lpDistanceToMoveHigh, uint dwMoveMethod);
+        internal static extern uint SetFilePointer(SafeFileHandle hFile, int lDistanceToMove, ref int lpDistanceToMoveHigh, uint dwMoveMethod);
 
         #endregion Kernel32
 

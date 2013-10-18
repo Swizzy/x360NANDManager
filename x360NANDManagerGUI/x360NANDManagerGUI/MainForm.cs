@@ -63,7 +63,8 @@
             readbtn.Enabled = !busy;
             erasebtn.Enabled = !busy;
             writebtn.Enabled = !busy;
-            xsvfbtn.Enabled = !busy;
+            xsvfbtn.Enabled = !busy && !mmc.Checked;
+
         }
 
         private void MainOnProgress(object sender, EventArg<ProgressData> e) {
@@ -323,6 +324,7 @@
             addSpareBox.Enabled = !mmc.Checked;
             correctSpareBox.Enabled = !mmc.Checked;
             eraseBox.Enabled = !mmc.Checked;
+            xsvfbtn.Enabled = !mmc.Checked;
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
@@ -392,6 +394,7 @@
 
             internal enum Devices {
                 None,
+                FTDI,
                 SPI,
                 MMC
             }

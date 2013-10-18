@@ -8,6 +8,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "x360NANDManagerGUI", "x360N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "x360NANDManager", "..\x360NANDManager\x360NANDManager\x360NANDManager.csproj", "{449BDA2C-811F-4B77-9B84-7AB4F2B695AE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5FF4716E-F513-46D0-9F54-D37C395E994D}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+		..\TODO.txt = ..\TODO.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		ALPHA|Any CPU = ALPHA|Any CPU
@@ -37,8 +43,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_BuildVersioningStyle = None.None.None.None
-		BuildVersion_UpdateAssemblyVersion = False
 		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.None.None
 	EndGlobalSection
 EndGlobal

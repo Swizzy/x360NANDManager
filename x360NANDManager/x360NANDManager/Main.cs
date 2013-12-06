@@ -10,7 +10,7 @@
 
     public static class Main {
         private const string BaseName = "x360NANDManager v{0}.{1} (Build: {2}) {3}";
-        private static readonly Version Ver = Assembly.GetExecutingAssembly().GetName().Version;
+        private static readonly Version Ver = Assembly.GetAssembly(typeof(Main)).GetName().Version;
 
         public static string Version {
             get {

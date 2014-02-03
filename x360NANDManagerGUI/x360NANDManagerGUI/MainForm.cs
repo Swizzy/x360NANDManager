@@ -13,7 +13,6 @@
     internal sealed partial class MainForm : Form {
         private readonly Debug _dbg = new Debug();
         private bool _abort;
-        private readonly bool _isAdmin;
         private Stopwatch _sw = new Stopwatch();
         private ISPIFlasher _spiFlasher;
         private IMMCFlasher _mmcFlasher;
@@ -36,10 +35,10 @@
 
         public MainForm() {
             InitializeComponent();
-            _isAdmin = Program.IsUserAnAdmin();
-            if(!_isAdmin)
+            var isAdmin = Program.IsUserAnAdmin();
+            if(!isAdmin)
                 MessageBox.Show(Resources.MMCDisabledNeedAdmin, Resources.AdminRequiredForMMC, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            mmc.Enabled = _isAdmin;
+            mmc.Enabled = isAdmin;
 
         }
 
@@ -427,6 +426,8 @@
             else
             {
                 mmccountbox.Maximum = tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector;
+                if (mmccountbox.Value <= 0)
+                    mmccountbox.Value = mmccountbox.Maximum;
                 mmcoffsetbox.Maximum = (tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector) - 1;
             }
         }

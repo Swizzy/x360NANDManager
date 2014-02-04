@@ -86,6 +86,8 @@
             return true;
         }
 
+        internal static bool CompareByteArrays(byte[] buf, ref byte[] largebuf, int offset) { return CompareByteArrays(ref buf, ref largebuf, offset); }
+
         internal static bool CompareByteArrays(ref byte[] buf, ref byte[] largebuf, int offset) {
             if(buf == largebuf)
                 return true;

@@ -62,9 +62,9 @@
         //}
 
         protected static byte[] AddSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
-            var ret = new byte[metaType == 2 ? 0x21000 : 0x4200];
+            var ret = new byte[0x4200];
             var dataoffset = 0;
-            var page = block * (metaType == 2 ? 0x100 : 0x20);
+            var page = block * 0x20;
             for(var offset = 0; offset < ret.Length; offset += 0x210, dataoffset += 0x200, page++) {
                 Buffer.BlockCopy(data, dataoffset, ret, offset, 0x200);
                 byte[] tmp;
@@ -95,8 +95,8 @@
         }
 
         private static void ReInitSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
-            var page = block * (metaType == 2 ? 0x100 : 0x20);
-            for(var offset = 0; offset < (metaType == 2 ? 0x21000 : 0x4200); offset += 0x210, page++) {
+            var page = block * 0x20;
+            for(var offset = 0; offset < (0x4200); offset += 0x210, page++) {
                 byte[] tmp;
                 Buffer.BlockCopy(new byte[0x10], 0, data, 0x200 + offset, 0x10); // Set the data to all 0's so we don't mess up by accident...
                 switch(metaType) {
@@ -131,8 +131,7 @@
 
         protected static void CorrectSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
             var offset = 0;
-            var pagesperblock = metaType == 2 ? 0x100 : 0x20;
-            for (var page = block * pagesperblock; page < (block * pagesperblock) + pagesperblock; page++, offset += 0x210)
+            for (var page = block * 0x20; page < (block * 0x20) + 0x20; page++, offset += 0x210)
             {
                 if(CompareByteArrays(UnInitializedSpareBuffer, ref data, offset + 0x200)) {
                     // Check if the page we are about to process is initalized, if not... re-initalize the whole block
@@ -140,7 +139,7 @@
                     return; // We don't want to continue processing it as we've allready processed this block...
                 }
                 byte[] tmp;
-                var skip = true;
+                var skip = block != 0;
                 switch(metaType) {
                     case 1:
                     case 0:

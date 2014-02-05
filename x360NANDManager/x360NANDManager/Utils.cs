@@ -30,11 +30,10 @@
             foreach(var s in tmp) {
                 if (pos > 0) {
                     if(pos % 32 == 0)
-                        ret += "\n";
+                        ret += "\n0x";
                     if (pos % 2 == 0 && pos % 32 != 0)
                         ret += " 0x";
-                    else
-                        ret += "0x";
+                    
                 }
                 ret += s;
                 pos++;

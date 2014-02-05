@@ -716,6 +716,7 @@
                 return datalist.ToArray();
             sw.Stop();
             UpdateStatus(string.Format("Erase completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+            UpdateProgress(last, last);
             return datalist.ToArray();
         }
 
@@ -756,6 +757,7 @@
                 return;
             sw.Stop();
             UpdateStatus(string.Format("Read completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+            UpdateProgress(last, last);
         }
 
         /// <summary>

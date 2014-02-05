@@ -339,6 +339,8 @@
                 UpdateProgress(block, last);
                 EraseBlock(block, verboseLevel);
             }
+            if (!AbortRequested)
+                UpdateProgress(last, last);
             DeInit();
             Release();
             if(AbortRequested)
@@ -435,7 +437,7 @@
                         UpdateStatus(string.Format("Erase aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block, lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, 0, totalBlocks);
                     EraseBlock(block, verboseLevel);
                 }
                 if(!AbortRequested) {
@@ -460,7 +462,7 @@
                         UpdateStatus(string.Format("Write aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block + (eraseFirst ? lastBlock : 0), lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, block + (eraseFirst ? lastBlock : 0), totalBlocks);
                     var tmp = addSpare ? new byte[0x4000] : new byte[0x4200];
                     Buffer.BlockCopy(data, offset, tmp, 0, tmp.Length);
                     offset += tmp.Length;
@@ -474,7 +476,11 @@
                 }
                 if(!AbortRequested) {
                     sw.Stop();
-                    UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    UpdateStatus(string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    if (!verify)
+                        UpdateProgress(lastBlock, lastBlock);
+                    else
+                        UpdateStatus("{0}Device will be reset before verifying...", Environment.NewLine);
                 }
             }
 
@@ -495,13 +501,14 @@
                         UpdateStatus(string.Format("Verify aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block + totalBlocks - lastBlock, lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, block + totalBlocks - lastBlock, totalBlocks);
                     var tmp = ReadBlock(block, verboseLevel);
                     if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }
                 if(!AbortRequested) {
+                    UpdateProgress(lastBlock, lastBlock);
                     sw.Stop();
                     UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                 }
@@ -571,7 +578,7 @@
                         UpdateStatus(string.Format("Erase aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block, lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, 0, totalBlocks);
                     EraseBlock(block, verboseLevel);
                 }
                 if(!AbortRequested) {
@@ -594,7 +601,7 @@
                         UpdateStatus(string.Format("Write aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block + (eraseFirst ? lastBlock : 0), lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, block + (eraseFirst ? lastBlock : 0), totalBlocks);
                     var tmp = br.ReadBytes(addSpare ? 0x4000 : 0x4200);
                     if(addSpare)
                         tmp = AddSpareBlock(ref tmp, block, xConfig.MetaType);
@@ -606,7 +613,11 @@
                 }
                 if(!AbortRequested) {
                     sw.Stop();
-                    UpdateStatus(verify ? string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before verifying...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine) : string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    UpdateStatus(string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    if (!verify)
+                        UpdateProgress(lastBlock, lastBlock);
+                    else
+                        UpdateStatus("{0}Device will be reset before verifying...", Environment.NewLine);
                 }
             }
 
@@ -627,13 +638,14 @@
                         UpdateStatus(string.Format("Verify aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                         break;
                     }
-                    UpdateProgress(block + totalBlocks - lastBlock, lastBlock, totalBlocks);
+                    UpdateProgress(block, lastBlock, block + totalBlocks - lastBlock, totalBlocks);
                     var tmp = ReadBlock(block, verboseLevel);
                     if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
                 }
                 if(!AbortRequested) {
+                    UpdateProgress(lastBlock, lastBlock);
                     sw.Stop();
                     UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                 }
@@ -700,10 +712,10 @@
             }
             DeInit();
             Release();
-            if(!AbortRequested) {
-                sw.Stop();
-                UpdateStatus(string.Format("Erase completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
-            }
+            if(AbortRequested)
+                return datalist.ToArray();
+            sw.Stop();
+            UpdateStatus(string.Format("Erase completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
             return datalist.ToArray();
         }
 

@@ -8,7 +8,7 @@
         event EventHandler<EventArg<string>> Error;
         event EventHandler<EventArg<ProgressData>> Progress;
 
-        void UpdateProgress(uint current, uint max, uint total = 0);
+        void UpdateProgress(uint current, uint max, uint totalCurrent = 0, uint total = 0);
 
         void UpdateMMCProgress(long currentSector, long lastSector, int sectorSize, long bufsize);
 

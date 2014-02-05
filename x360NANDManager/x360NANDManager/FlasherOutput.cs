@@ -25,15 +25,18 @@
         /// </summary>
         /// <param name="current"> Current block </param>
         /// <param name="max"> Last Block </param>
+        /// <param name="totalCurrent"> Current block (total blocks) </param>
         /// <param name="total"> Total Block (Used for calculating progress with multipile parts) </param>
-        public void UpdateProgress(uint current, uint max, uint total = 0) {
+        public void UpdateProgress(uint current, uint max, uint totalCurrent = 0, uint total = 0) {
             var prg = Progress;
             if(prg == null)
                 return;
             if(total == 0)
                 total = max;
+            if(totalCurrent == 0)
+                totalCurrent = current;
             prg(null, new EventArg<ProgressData>(new ProgressData {
-                                                                  Current = current, Maximum = max, Percentage = ((double) (current + 1) / total) * 100
+                                                                  Current = current, Maximum = max, Percentage = ((double) (totalCurrent + 1) / total) * 100
                                                                   }));
         }
 

@@ -153,10 +153,10 @@
                     break;
                 case SPIPresets.BigBlockSystemOnly:
                     Start = 0;
-                    End = 0;
+                    End = 0x1000;
                     break;
                 case SPIPresets.BigBlockMemoryUnit:
-                    Start = 0;
+                    Start = 0x1000;
                     End = 0;
                     break;
                 default:

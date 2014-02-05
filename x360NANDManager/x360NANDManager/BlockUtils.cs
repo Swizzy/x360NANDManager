@@ -94,7 +94,7 @@
             return ret;
         }
 
-        private static void ReInitSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
+        private static void InitSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
             var page = block * 0x20;
             for(var offset = 0; offset < (0x4200); offset += 0x210, page++) {
                 byte[] tmp;
@@ -135,7 +135,7 @@
             {
                 if(CompareByteArrays(UnInitializedSpareBuffer, ref data, offset + 0x200)) {
                     // Check if the page we are about to process is initalized, if not... re-initalize the whole block
-                    ReInitSpareBlock(ref data, block, metaType); // Assume that the whole block is not initalized, and re-initalize it...
+                    InitSpareBlock(ref data, block, metaType); // Assume that the whole block is not initalized, and re-initalize it...
                     return; // We don't want to continue processing it as we've allready processed this block...
                 }
                 byte[] tmp;
@@ -182,7 +182,7 @@
                     default:
                         throw new NotSupportedException("MetaType is not supported");
                 }
-                tmp = CalcECD(ref data, offset);
+                tmp = CalcECD(ref data, offset); // Always make sure the ECD is correct, otherwise the console won't boot anyways ;)
                 Buffer.BlockCopy(tmp, 0, data, offset + 0x20C, tmp.Length);
             }
         }

@@ -21,16 +21,16 @@
         internal static string GetSizeReadable(long i)
         {
             if (i >= 0x1000000000000000) // Exabyte
-                return string.Format("{0:0.##} EB", (double)(i >> 50) / 1024);
+                return string.Format("{0:0} EB", (double)(i >> 50) / 1024);
             if (i >= 0x4000000000000) // Petabyte
-                return string.Format("{0:0.##} PB", (double)(i >> 40) / 1024);
+                return string.Format("{0:0} PB", (double)(i >> 40) / 1024);
             if (i >= 0x10000000000) // Terabyte
-                return string.Format("{0:0.##} TB", (double)(i >> 30) / 1024);
+                return string.Format("{0:0} TB", (double)(i >> 30) / 1024);
             if (i >= 0x40000000) // Gigabyte
-                return string.Format("{0:0.##} GB", (double)(i >> 20) / 1024);
+                return string.Format("{0:0} GB", (double)(i >> 20) / 1024);
             if (i >= 0x100000) // Megabyte
-                return string.Format("{0:0.##} MB", (double)(i >> 10) / 1024);
-            return i >= 0x400 ? string.Format("{0:0.##} KB", (double)i / 1024) : string.Format("{0} B", i);
+                return string.Format("{0:0} MB", (double)(i >> 10) / 1024);
+            return i >= 0x400 ? string.Format("{0:0} KB", (double)i / 1024) : string.Format("{0} B", i);
         }
 
         public MainForm() {
@@ -82,10 +82,10 @@
                             else
                                 data.Current = data.Current - data.Maximum;
                         }
-                        statuslbl.Text = string.Format("Processed block 0x{0:X} of 0x{1:X}", data.Current, data.Maximum);
+                        statuslbl.Text = string.Format("Processed block 0x{0:X} ({2}) of 0x{1:X} ({3}) [ {4}/s ]", data.Current, data.Maximum, GetSizeReadable(data.Current * 0x4200), GetSizeReadable(data.Maximum * 0x4200), GetSizeReadable((long)((data.Current * 0x4200) / _sw.Elapsed.TotalSeconds)));
                     }
                     else
-                        statuslbl.Text = string.Format("Processed {0} of {1} ({2}/s)", GetSizeReadable(data.Current), GetSizeReadable(data.Maximum), GetSizeReadable((long) (data.Current / _sw.Elapsed.TotalSeconds)));
+                        statuslbl.Text = string.Format("Processed {0} of {1} [ {2}/s ]", GetSizeReadable(data.Current), GetSizeReadable(data.Maximum), GetSizeReadable((long) (data.Current / _sw.Elapsed.TotalSeconds)));
                 }
                 else
                     Invoke(new MethodInvoker(() => SetProgress(data)));

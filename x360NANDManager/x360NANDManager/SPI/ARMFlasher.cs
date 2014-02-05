@@ -736,8 +736,7 @@
                     break;
                 }
                 UpdateProgress(block, last);
-                var data = ReadBlock(block, verboseLevel);
-                bw.Write(data);
+                bw.Write(ReadBlock(block, verboseLevel));
             }
             DeInit();
             Release();

@@ -96,7 +96,8 @@ namespace x360NANDManager.XSVF {
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             UpdateStatus(string.Format("0x{0:X} bytes sent OK!{1}Executing File...", data.Length, Environment.NewLine));
             ExecuteXSVF();
-            UpdateStatus(GetARMStatus() != 0 ? "FAILED!" : "OK!");
+            var status = GetARMStatus();
+            UpdateStatus(status != 0 ? string.Format("FAILED! (status: 0x{0:X}", status) : "OK!");
         }
 
         /// <summary>

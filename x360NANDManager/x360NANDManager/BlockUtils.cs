@@ -2,7 +2,7 @@
     using System;
 
     public abstract class BlockUtils : Utils {
-        private static readonly byte[] UnInitializedSpareBuffer = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+        internal static readonly byte[] UnInitializedSpareBuffer = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
         private static byte[] CalcECD(ref byte[] data, int offset) {
             uint val = 0;
@@ -131,8 +131,7 @@
 
         protected static void CorrectSpareBlock(ref byte[] data, uint block, uint metaType = 0x0) {
             var offset = 0;
-            for (var page = block * 0x20; page < (block * 0x20) + 0x20; page++, offset += 0x210)
-            {
+            for (var page = block * 0x20; page < (block * 0x20) + 0x20; page++, offset += 0x210) {
                 if(CompareByteArrays(UnInitializedSpareBuffer, ref data, offset + 0x200)) {
                     // Check if the page we are about to process is initalized, if not... re-initalize the whole block
                     InitSpareBlock(ref data, block, metaType); // Assume that the whole block is not initalized, and re-initalize it...
@@ -186,5 +185,7 @@
                 Buffer.BlockCopy(tmp, 0, data, offset + 0x20C, tmp.Length);
             }
         }
+
+        
     }
 }

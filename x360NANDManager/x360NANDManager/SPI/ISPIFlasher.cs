@@ -33,13 +33,13 @@
 
         #region Read
 
-        byte[] ReadBlock(uint blockID, int verboseLevel = 0);
+        byte[] ReadBlock(uint blockID, bool zeroFillBadBlocks = true, int verboseLevel = 0);
 
-        byte[] Read(uint startBlock, uint blockCount, int verboseLevel = 0);
+        byte[] Read(uint startBlock, uint blockCount, bool zeroFillBadBlocks = true, int verboseLevel = 0);
 
-        void Read(uint startBlock, uint blockCount, string file, int verboseLevel = 0);
+        void Read(uint startBlock, uint blockCount, string file, bool zeroFillBadBlocks = true, int verboseLevel = 0);
 
-        void Read(uint startBlock, uint blockCount, IEnumerable<string> files, int verboseLevel = 0);
+        void Read(uint startBlock, uint blockCount, IEnumerable<string> files, bool zeroFillBadBlocks = true, int verboseLevel = 0);
 
         #endregion Read
     }

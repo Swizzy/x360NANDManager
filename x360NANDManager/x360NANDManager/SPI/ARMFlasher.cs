@@ -7,7 +7,7 @@
     using LibUsbDotNet.Info;
     using LibUsbDotNet.Main;
 
-    internal class ARMFlasher : FlasherOutput, ISPIFlasher, IDisposable {
+    internal class ARMFlasher: FlasherOutput, ISPIFlasher, IDisposable {
         #region Private Data Fields
 
         protected bool AbortRequested;
@@ -72,7 +72,7 @@
             var tmp = BitConverter.GetBytes(argB);
             Array.Resize(ref buf, buf.Length + tmp.Length);
             Array.Copy(tmp, 0, buf, buf.Length - tmp.Length, tmp.Length);
-            var packet = new UsbSetupPacket((byte) UsbRequestType.TypeVendor, (byte) cmd, 0, 0, 0);
+            var packet = new UsbSetupPacket((byte)UsbRequestType.TypeVendor, (byte)cmd, 0, 0, 0);
             int sent;
             Device.ControlTransfer(ref packet, buf, buf.Length, out sent);
         }
@@ -98,9 +98,9 @@
                     wholeUsbDevice.SetConfiguration(DeviceConfigInfo.Descriptor.ConfigID);
                     wholeUsbDevice.ClaimInterface(0);
                 }
-                _reader = Device.OpenEndpointReader((ReadEndpointID) 0x82);
+                _reader = Device.OpenEndpointReader((ReadEndpointID)0x82);
                 ClearReadBuffer();
-                _writer = Device.OpenEndpointWriter((WriteEndpointID) 0x05);
+                _writer = Device.OpenEndpointWriter((WriteEndpointID)0x05);
                 UsbDevice.UsbErrorEvent += UsbDeviceOnUsbErrorEvent;
                 return true;
             }
@@ -290,10 +290,13 @@
         /// <summary>
         ///     Abort Operation
         /// </summary>
-        public void Abort() { AbortRequested = true; }
+        public void Abort() {
+            AbortRequested = true;
+        }
 
         /// <summary>
-        ///     Sends the erase command for <paramref name="blockID" />
+        ///     Sends the erase command for
+        ///     <paramref name="blockID" />
         ///     <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///     <exception cref="ArgumentOutOfRangeException">
         ///         If
@@ -318,7 +321,10 @@
         }
 
         /// <summary>
-        ///     Sends the erase command for BlockID: <paramref name="startBlock" /> and onwards for <paramref name="blockCount" />
+        ///     Sends the erase command for BlockID:
+        ///     <paramref name="startBlock" />
+        ///     and onwards for
+        ///     <paramref name="blockCount" />
         ///     <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///     <exception cref="ArgumentException">If there is a problem with your block count settings</exception>
         /// </summary>
@@ -359,7 +365,11 @@
         }
 
         /// <summary>
-        ///     Writes the data of <paramref name="data" /> to <paramref name="blockID" /> <c>as is</c>
+        ///     Writes the data of
+        ///     <paramref name="data" />
+        ///     to
+        ///     <paramref name="blockID" />
+        ///     <c>as is</c>
         ///     <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///     <exception cref="ArgumentOutOfRangeException">
         ///         If
@@ -379,7 +389,7 @@
                 throw new ArgumentException(string.Format("Data must be 0x{0:X} bytes in length for this flashconfig!", 0x4200));
             if(blockID > _xcfg.SizeSmallBlocks)
                 throw new ArgumentOutOfRangeException("blockID");
-            SendCMD(Commands.DataWrite, blockID, (uint) data.Length);
+            SendCMD(Commands.DataWrite, blockID, (uint)data.Length);
             var err = WriteToDevice(data);
             if(err != ErrorCode.Success)
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
@@ -390,10 +400,12 @@
         }
 
         /// <summary>
-        ///     Writes buffer to device using specified write mode (<paramref name="mode" />) starting at
-        ///     <paramref name="startBlock" /> and writing untill the end of the the buffer or
-        ///     <paramref
-        ///         name="blockCount" />
+        ///     Writes buffer to device using specified write mode (
+        ///     <paramref name="mode" />
+        ///     ) starting at
+        ///     <paramref name="startBlock" />
+        ///     and writing untill the end of the the buffer or
+        ///     <paramref name="blockCount" />
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
         /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device/file write will be done </param>
@@ -461,7 +473,8 @@
                 }
                 if(!AbortRequested) {
                     sw.Stop();
-                    UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
+                    UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds,
+                                               Environment.NewLine));
                     Reset();
                 }
             }
@@ -521,7 +534,7 @@
                         break;
                     }
                     UpdateProgress(block, lastBlock, block + totalBlocks - lastBlock, totalBlocks);
-                    var tmp = ReadBlock(block, verboseLevel);
+                    var tmp = ReadBlock(block, false, verboseLevel);
                     if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                         SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                     offset += tmp.Length;
@@ -540,10 +553,12 @@
         }
 
         /// <summary>
-        ///     Writes file to device using specified write mode (<paramref name="mode" />) starting at
-        ///     <paramref name="startBlock" /> and writing untill the end of the file or
-        ///     <paramref
-        ///         name="blockCount" />
+        ///     Writes file to device using specified write mode (
+        ///     <paramref name="mode" />
+        ///     ) starting at
+        ///     <paramref name="startBlock" />
+        ///     and writing untill the end of the file or
+        ///     <paramref name="blockCount" />
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
         /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device/file write will be done </param>
@@ -608,7 +623,8 @@
                     }
                     if(!AbortRequested) {
                         sw.Stop();
-                        UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds, Environment.NewLine));
+                        UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds,
+                                                   Environment.NewLine));
                         Reset();
                     }
                 }
@@ -665,7 +681,7 @@
                             break;
                         }
                         UpdateProgress(block, lastBlock, block + totalBlocks - lastBlock, totalBlocks);
-                        var tmp = ReadBlock(block, verboseLevel);
+                        var tmp = ReadBlock(block, false, verboseLevel);
                         if(!CompareByteArrays(ref tmp, ref writtenData, offset))
                             SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
                         offset += tmp.Length;
@@ -685,7 +701,9 @@
         }
 
         /// <summary>
-        ///     Reads <paramref name="blockID" /> using the block size specified by the flashconfig
+        ///     Reads
+        ///     <paramref name="blockID" />
+        ///     using the block size specified by the flashconfig
         ///     <exception cref="X360NANDManagerException">If Device is not initalized or there is a fatal USB error</exception>
         ///     <exception cref="ArgumentOutOfRangeException">
         ///         If
@@ -699,22 +717,26 @@
         ///     only print write error without details)
         /// </param>
         /// <returns> The block data </returns>
-        public byte[] ReadBlock(uint blockID, int verboseLevel = 0) {
+        public byte[] ReadBlock(uint blockID, bool zeroFillBadBlocks = true, int verboseLevel = 0) {
             CheckFlashState();
             if(blockID > _xcfg.SizeSmallBlocks)
                 throw new ArgumentOutOfRangeException("blockID");
             var data = new byte[_xcfg.BlockReadSize];
-            SendCMD(Commands.DataRead, blockID, (uint) data.Length);
+            SendCMD(Commands.DataRead, blockID, (uint)data.Length);
             var err = ReadFromDevice(ref data);
             if(err != ErrorCode.Success)
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             var status = GetFlashStatus();
-            IsBadBlock(status, blockID, "Reading", verboseLevel >= 1);
-            return data;
+            if (IsBadBlock(status, blockID, "Reading", verboseLevel >= 1) && !zeroFillBadBlocks)
+                return data;
+            return new byte[data.Length];
         }
 
         /// <summary>
-        ///     Reads data from nand from block <paramref name="startBlock" /> and onwards for <paramref name="blockCount" />
+        ///     Reads data from nand from block
+        ///     <paramref name="startBlock" />
+        ///     and onwards for
+        ///     <paramref name="blockCount" />
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
         /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device dump will be made </param>
@@ -723,7 +745,7 @@
         ///     only print write error without details)
         /// </param>
         /// <returns> Requested block data </returns>
-        public byte[] Read(uint startBlock, uint blockCount, int verboseLevel = 0) {
+        public byte[] Read(uint startBlock, uint blockCount, bool zeroFillBadBlocks = true, int verboseLevel = 0) {
             CheckDeviceState();
             PrintARMVersion();
             AbortRequested = false;
@@ -738,11 +760,11 @@
             for(var block = startBlock; block <= last; block++) {
                 if(AbortRequested) {
                     sw.Stop();
-                    UpdateStatus(string.Format("Erase aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    UpdateStatus(string.Format("Read aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                     break;
                 }
                 UpdateProgress(block, last);
-                var tmp = ReadBlock(block, verboseLevel);
+                var tmp = ReadBlock(block, zeroFillBadBlocks, verboseLevel);
                 datalist.AddRange(tmp);
             }
             DeInit();
@@ -750,15 +772,18 @@
             if(AbortRequested)
                 return datalist.ToArray();
             sw.Stop();
-            UpdateStatus(string.Format("Erase completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+            UpdateStatus(string.Format("Read completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
             UpdateProgress(last, last);
             return datalist.ToArray();
         }
 
         /// <summary>
-        ///     Reads data from nand from block <paramref name="startBlock" /> and onwards for <paramref name="blockCount" /> to
-        ///     <paramref
-        ///         name="file" />
+        ///     Reads data from nand from block
+        ///     <paramref name="startBlock" />
+        ///     and onwards for
+        ///     <paramref name="blockCount" />
+        ///     to
+        ///     <paramref name="file" />
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
         /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device dump will be made </param>
@@ -767,7 +792,7 @@
         ///     Specifies if you want alot of information on read errors or just a read error (default =
         ///     only print write error without details)
         /// </param>
-        public void Read(uint startBlock, uint blockCount, string file, int verboseLevel = 0) {
+        public void Read(uint startBlock, uint blockCount, string file, bool zeroFillBadBlocks = true, int verboseLevel = 0) {
             CheckDeviceState();
             AbortRequested = false;
             PrintARMVersion();
@@ -788,7 +813,7 @@
                         break;
                     }
                     UpdateProgress(block, last);
-                    bw.Write(ReadBlock(block, verboseLevel));
+                    bw.Write(ReadBlock(block, zeroFillBadBlocks, verboseLevel));
                 }
                 DeInit();
                 Release();
@@ -801,9 +826,12 @@
         }
 
         /// <summary>
-        ///     Reads data from nand from block <paramref name="startBlock" /> and onwards for <paramref name="blockCount" /> to
-        ///     <paramref
-        ///         name="files" />
+        ///     Reads data from nand from block
+        ///     <paramref name="startBlock" />
+        ///     and onwards for
+        ///     <paramref name="blockCount" />
+        ///     to
+        ///     <paramref name="files" />
         /// </summary>
         /// <param name="startBlock"> Starting blockID </param>
         /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device dump will be made </param>
@@ -812,7 +840,7 @@
         ///     Specifies if you want alot of information on read errors or just a read error (default =
         ///     only print write error without details)
         /// </param>
-        public void Read(uint startBlock, uint blockCount, IEnumerable<string> files, int verboseLevel = 0) {
+        public void Read(uint startBlock, uint blockCount, IEnumerable<string> files, bool zeroFillBadBlocks = true, int verboseLevel = 0) {
             CheckDeviceState();
             PrintARMVersion();
             AbortRequested = false;
@@ -824,7 +852,7 @@
                     UpdateStatus(string.Format("Read aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
                     break;
                 }
-                Read(startBlock, blockCount, file, verboseLevel);
+                Read(startBlock, blockCount, file, zeroFillBadBlocks, verboseLevel);
                 Reset();
             }
             if(AbortRequested)
@@ -850,11 +878,13 @@
         /// <summary>
         ///     Release the USB Device
         /// </summary>
-        ~ARMFlasher() { Release(); }
+        ~ARMFlasher() {
+            Release();
+        }
 
         #region Nested type: Commands
 
-        internal enum Commands : byte {
+        internal enum Commands: byte {
             DataRead = 0x01,
             DataWrite = 0x02,
             DataInit = 0x03,

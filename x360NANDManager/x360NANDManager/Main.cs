@@ -26,11 +26,23 @@
             }
         }
 
-        [DllImport("shell32.dll", SetLastError = true)] [return : MarshalAs(UnmanagedType.Bool)] internal static extern bool IsUserAnAdmin();
+        [DllImport("shell32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] internal static extern bool IsUserAnAdmin();
 
         public static ISPIFlasher GetSPIFlasher() {
             if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4))
                 return new ARMFlasher(0xFFFF, 0x4);
+            if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
+                return new ARMFlasher(0x11D4, 0x8338);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
+        }
+
+        public static ISPIFlasher GetNandProFlasher() {
+            if(NativeWin32.IsDeviceConnected(0xFFFF, 0x4))
+                return new ARMFlasher(0xFFFF, 0x4);
+            throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);
+        }
+
+        public static ISPIFlasher GetJrunnerFlasher() {
             if(NativeWin32.IsDeviceConnected(0x11D4, 0x8338))
                 return new ARMFlasher(0x11D4, 0x8338);
             throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.NoDeviceFound);

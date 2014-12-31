@@ -184,7 +184,7 @@
                     e.Result = true;
                     switch(args.Operation) {
                         case BWArgs.Operations.Read:
-                            _spiFlasher.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, 1);
+                            _spiFlasher.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, false, 1);
                             break;
                         case BWArgs.Operations.Erase:
                             _spiFlasher.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);

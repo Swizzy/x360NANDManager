@@ -308,7 +308,11 @@
 
         private void DeviceCheckedChanged(object sender, EventArgs e) {
             if(mmc.Checked && sender == mmc)
+#if ALL_MMC_DEVICES
+                mmcdevice.DataSource = Main.GetMMCDeviceList(false);
+#else
                 mmcdevice.DataSource = Main.GetMMCDeviceList();
+#endif
             else if (sender == mmc)
                 mmcdevice.DataSource = null;
             mmcoffsetbox.Enabled = mmc.Checked;

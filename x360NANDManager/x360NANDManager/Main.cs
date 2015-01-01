@@ -104,7 +104,9 @@
             MUOnlyEX,
             XeLL,
             XeLLEX,
-            Full
+            Full,
+            XeLLToEnd,
+            XeLLToEndEX
         }
 
         #endregion
@@ -114,7 +116,9 @@
         public enum SPIPresets {
             Auto,
             BigBlockSystemOnly,
-            BigBlockMemoryUnit
+            BigBlockMemoryUnit,
+            XeLL,
+            XeLLToEnd
         }
 
         #endregion
@@ -152,6 +156,14 @@
                     Start = 0;
                     End = 0x140000;
                     break;
+                case MMCPresets.XeLLToEnd:
+                    Start = 0xA00;
+                    End = 0;
+                    break;
+                case MMCPresets.XeLLToEndEX:
+                    Start = 0x140000;
+                    End = 0;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("mmc");
             }
@@ -169,6 +181,14 @@
                     break;
                 case SPIPresets.BigBlockMemoryUnit:
                     Start = 0x1000;
+                    End = 0;
+                    break;
+                case SPIPresets.XeLL:
+                    Start = 0;
+                    End = 0x50;
+                    break;
+                case SPIPresets.XeLLToEnd:
+                    Start = 0x50;
                     End = 0;
                     break;
                 default:

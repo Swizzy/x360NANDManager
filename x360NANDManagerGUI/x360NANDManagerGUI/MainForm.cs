@@ -39,7 +39,7 @@
             if(!isAdmin)
                 MessageBox.Show(Resources.MMCDisabledNeedAdmin, Resources.AdminRequiredForMMC, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             mmc.Enabled = isAdmin;
-
+            DeviceCheckedChanged(null, null);
         }
 
         private void Form1Load(object sender, EventArgs e) {
@@ -184,7 +184,7 @@
                     e.Result = true;
                     switch(args.Operation) {
                         case BWArgs.Operations.Read:
-                            _spiFlasher.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, false, 1);
+                            _spiFlasher.Read((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, args.ZeroFillBadBlocks, 1);
                             break;
                         case BWArgs.Operations.Erase:
                             _spiFlasher.Erase((uint) spiblockbox.Value, (uint) spicountbox.Value, 1);
@@ -328,6 +328,20 @@
             correctSpareBox.Enabled = !mmc.Checked;
             eraseBox.Enabled = !mmc.Checked;
             xsvfbtn.Enabled = !mmc.Checked;
+
+            zeroFillBadBlocks.Enabled = !mmc.Checked;
+
+            if(mmc.Checked) {
+                presetsBox.Items.Clear();
+                foreach (var preset in Enum.GetNames(typeof(Presets.MMCPresets))) {
+                    if(!preset.EndsWith("ex", StringComparison.CurrentCultureIgnoreCase))
+                        presetsBox.Items.Add(preset);
+                }
+            }
+            else {
+                presetsBox.Items.Clear();
+                presetsBox.Items.AddRange(Enum.GetNames(typeof(Presets.SPIPresets)));
+            }
         }
 
         private void AbortbtnClick(object sender, EventArgs e) {
@@ -367,6 +381,7 @@
             public readonly bool EraseFirst;
             public readonly Operations Operation;
             public readonly bool Verify;
+            public readonly bool ZeroFillBadBlocks;
             public string File;
             public readonly MMCDevice MMCDevice;
 
@@ -391,6 +406,7 @@
                 EraseFirst = Program.MainForm.eraseBox.Checked;
                 AddSpare = Program.MainForm.addSpareBox.Checked;
                 CorrectSpare = Program.MainForm.correctSpareBox.Checked;
+                ZeroFillBadBlocks = Program.MainForm.zeroFillBadBlocks.Checked;
             }
 
             #region Nested type: Devices
@@ -433,6 +449,20 @@
                 if (mmccountbox.Value <= 0)
                     mmccountbox.Value = mmccountbox.Maximum;
                 mmcoffsetbox.Maximum = (tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector) - 1;
+            }
+        }
+
+        private void presetsBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(mmc.Checked) {
+                var preset = new Presets((Presets.MMCPresets)Enum.Parse(typeof(Presets.MMCPresets), presetsBox.SelectedItem.ToString()));
+                mmcoffsetbox.Text = preset.Start.ToString("X");
+                mmccountbox.Text = preset.End.ToString("X");
+            }
+            else {
+                var preset = new Presets((Presets.SPIPresets)Enum.Parse(typeof(Presets.SPIPresets), presetsBox.SelectedItem.ToString()));
+                spiblockbox.Text = preset.Start.ToString("X");
+                spicountbox.Text = preset.End.ToString("X");
             }
         }
     }

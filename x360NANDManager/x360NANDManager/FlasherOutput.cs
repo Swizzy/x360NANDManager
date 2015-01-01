@@ -140,9 +140,10 @@
                 }
                 return true;
             }
-            if(status == 0)
-                SendError("Unkown Status code (0) Encounterd! while {0} block 0x{1:X}", operation, block);
-            return false;
+            if(status == 0x200)
+                return false; // This block is OK
+            SendError("Unkown Status code (0) Encounterd! while {0} block 0x{1:X}", operation, block);
+            return true;
         }
 
         #endregion IFlasherOutput Implementation

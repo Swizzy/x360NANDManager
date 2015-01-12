@@ -130,12 +130,12 @@
                 int read;
                 if(totalread > 0) {
                     var tmp = new byte[buf.Length - totalread];
-                    err = _reader.Read(tmp, 1000, out read);
+                    err = _reader.Read(tmp, 2000, out read);
                     if(read < buf.Length)
                         Buffer.BlockCopy(tmp, 0, buf, totalread, tmp.Length);
                 }
                 else
-                    err = _reader.Read(buf, 1000, out read);
+                    err = _reader.Read(buf, 2000, out read);
                 if(err != ErrorCode.None && err != ErrorCode.IoTimedOut)
                     Main.SendDebug(String.Format("Error: {0}", err));
                 if(read == buf.Length)
@@ -161,10 +161,10 @@
                 if(totalwrote > 0) {
                     var tmp = new byte[buf.Length - totalwrote];
                     Buffer.BlockCopy(buf, buf.Length - tmp.Length, tmp, 0, tmp.Length);
-                    err = _writer.Write(tmp, 1000, out wrote);
+                    err = _writer.Write(tmp, 2000, out wrote);
                 }
                 else
-                    err = _writer.Write(buf, 1000, out wrote);
+                    err = _writer.Write(buf, 2000, out wrote);
                 if(err != ErrorCode.None && err != ErrorCode.IoTimedOut)
                     Main.SendDebug(String.Format("Error: {0}", err));
                 totalwrote += wrote;

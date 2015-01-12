@@ -551,8 +551,10 @@ namespace x360NANDManager.MMC {
                         var path = NativeWin32.GetDevicePath(drive.Name);
                         tmp.Add(devnum, new MMCDevice(drive.Name, path, NativeWin32.GetGeometryEX(path)));
                     }
-                    else
+                    else {
                         tmp[devnum].DisplayName = string.Format("{0}, {1}", tmp[devnum].DisplayName, drive.Name);
+                        tmp[devnum].AddVolume(drive.Name);
+                    }
                 }
                 catch (Exception ex) {
                     var dex = ex as X360NANDManagerException;

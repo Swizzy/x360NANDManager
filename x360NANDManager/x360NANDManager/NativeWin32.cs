@@ -3,6 +3,7 @@
     using System.ComponentModel;
     using System.IO;
     using System.Runtime.InteropServices;
+    using System.Text;
     using Microsoft.Win32.SafeHandles;
 
     public class NativeWin32 {
@@ -162,6 +163,16 @@
         [DllImport("Kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern uint SetFilePointer(SafeFileHandle hFile, int lDistanceToMove, ref int lpDistanceToMoveHigh, uint dwMoveMethod);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool GetVolumeNameForVolumeMountPoint(string lpszVolumeMountPoint, [Out] StringBuilder lpszVolumeName, int cchBufferLength);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool DeleteVolumeMountPoint(string lpszVolumeMountPoint);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool SetVolumeMountPoint(string lpszVolumeMountPoint,
+           string lpszVolumeName);
+
         #endregion Kernel32
 
         #region Functions
@@ -276,6 +287,17 @@
                     handle.Close();
                 }
             }
+        }
+
+        internal static void UnmountVolume(string volumePath, out SafeFileHandle handle)
+        {
+            Main.SendDebug(string.Format("Unmounting: {0}", volumePath));
+            handle = GetFileHandle(volumePath);
+                int outsize;
+                if (!DeviceIoControl(handle, (int)IOCTL.DismountVolume, IntPtr.Zero, 0, IntPtr.Zero, 0, out outsize, IntPtr.Zero))
+                    throw new Win32Exception();
+                else
+                    Main.SendDebug(string.Format("{0} Successfully Unmounted!", volumePath));
         }
 
         internal static string GetDevicePath(string device) {
@@ -424,6 +446,12 @@
                 default:
                     throw new ArgumentOutOfRangeException("origin");
             }
+        }
+
+        internal static string GetVolumeGuidPath(string mountPoint) {
+            var sb = new StringBuilder(1024);
+            GetVolumeNameForVolumeMountPoint(mountPoint, sb, sb.Capacity);
+            return sb.ToString();
         }
 
         #endregion Functions

@@ -1,14 +1,28 @@
 namespace x360NANDManager.MMC {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
     using Microsoft.Win32.SafeHandles;
 
     public sealed class MMCDevice : Utils, IDisposable {
+        private class MountPoint {
+            public readonly string MountPath;
+            public readonly string VolumePath;
+
+            public MountPoint(string mountPath) {
+                MountPath = mountPath;
+                VolumePath = NativeWin32.GetVolumeGuidPath(MountPath);
+            }
+        }
+
         private SafeFileHandle _deviceHandle;
         private FileStream _fileStream;
+        private readonly List<string> _volumes = new List<string>();
+        private readonly List<MountPoint> _mountPoints = new List<MountPoint>();
 
         internal MMCDevice(string displayName, string path, NativeWin32.DiskGeometryEX geometry) {
+            _volumes.Add(displayName);
             DisplayName = displayName;
             Path = path;
             DiskGeometryEX = geometry;
@@ -109,6 +123,7 @@ namespace x360NANDManager.MMC {
             if(!NativeWin32.LockDevice(Path))
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.DeviceLockFailed);
             IsLocked = true;
+            UnmountDevice();
             Main.SendDebug("Device locked... opening the handle now!");
             _deviceHandle = NativeWin32.GetFileHandleRaw(Path, FileAccess.ReadWrite, FileShare.ReadWrite);
             Main.SendDebug("Device opened!");
@@ -126,6 +141,7 @@ namespace x360NANDManager.MMC {
             try {
                 Main.SendDebug("Unlocking device...");
                 NativeWin32.UnLockDevice(Path);
+                RemountDevice();
             }
             catch(Win32Exception ex) {
                 if(ex.NativeErrorCode != 158) // Already unlocked, not really an error...
@@ -184,6 +200,26 @@ namespace x360NANDManager.MMC {
             if (!res)
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.Win32Error);
             return (int)readcount;
+        }
+
+        public void AddVolume(string volume) { _volumes.Add(volume); }
+
+        public void UnmountDevice() {
+            foreach(var volume in _volumes) {
+                SafeFileHandle vHandle;
+                NativeWin32.UnmountVolume(volume, out vHandle);
+                vHandle.Close();
+                _mountPoints.Add(new MountPoint(volume));
+                Main.SendDebug("Removing mount point: {0}", volume);
+                NativeWin32.DeleteVolumeMountPoint(volume);
+            }
+        }
+
+        public void RemountDevice() {
+            foreach(var mp in _mountPoints) {
+                Main.SendDebug("Mounting {0} to {1}", mp.VolumePath, mp.MountPath);
+                NativeWin32.SetVolumeMountPoint(mp.MountPath, mp.VolumePath);
+            }
         }
     }
 }

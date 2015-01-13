@@ -29,6 +29,8 @@
 
         void Write(uint startBlock, uint blockCount, string file, SPIWriteModes mode = SPIWriteModes.None, int verboseLevel = 0);
 
+        void Write(uint startBlock, uint blockCount, uint filestartblock, string file, SPIWriteModes mode = SPIWriteModes.None, int verboseLevel = 0);
+
         #endregion Write
 
         #region Read

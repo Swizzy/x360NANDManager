@@ -165,7 +165,10 @@
                             break;
                         case BWArgs.Operations.Write:
                             _dbg.AddDebug("Write started...");
-                            _mmcFlasher.Write(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value, args.Verify);
+                            if (filesectorbox.Value > 0)
+                                _mmcFlasher.Write(args.File, (long)filesectorbox.Value, (long)mmcoffsetbox.Value, (long)mmccountbox.Value, args.Verify);
+                            else
+                                _mmcFlasher.Write(args.File, (long)mmcoffsetbox.Value, (long)mmccountbox.Value, args.Verify);
                             break;
                         default:
                             _dbg.AddDebug("Unkown command found!");
@@ -199,7 +202,10 @@
                                 mode |= SPIWriteModes.EraseFirst;
                             if(args.Verify)
                                 mode |= SPIWriteModes.VerifyAfter;
-                            _spiFlasher.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, mode, 1);
+                            if (fileblockbox.Value > 0)
+                                _spiFlasher.Write((uint)spiblockbox.Value, (uint)spicountbox.Value, (uint)fileblockbox.Value, args.File, mode, 1);
+                            else
+                                _spiFlasher.Write((uint) spiblockbox.Value, (uint) spicountbox.Value, args.File, mode, 1);
                             break;
                         default:
                             throw new Exception("Unkown Operation");
@@ -331,6 +337,9 @@
 
             zeroFillBadBlocks.Enabled = !mmc.Checked;
 
+            fileblockbox.Enabled = !mmc.Checked;
+            filesectorbox.Enabled = mmc.Checked;
+
             if(mmc.Checked) {
                 presetsBox.Items.Clear();
                 foreach (var preset in Enum.GetNames(typeof(Presets.MMCPresets))) {
@@ -442,6 +451,7 @@
             if (tmp == null) {
                 mmccountbox.Maximum = 0;
                 mmcoffsetbox.Maximum = 0;
+                filesectorbox.Maximum = 0;
             }
             else
             {
@@ -449,6 +459,7 @@
                 if (mmccountbox.Value <= 0)
                     mmccountbox.Value = mmccountbox.Maximum;
                 mmcoffsetbox.Maximum = (tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector) - 1;
+                filesectorbox.Maximum = (tmp.Size / tmp.DiskGeometryEX.Geometry.BytesPerSector) - 1;
             }
         }
 

@@ -71,6 +71,10 @@
             this.xsvfbtn = new System.Windows.Forms.Button();
             this.statusStrip2 = new System.Windows.Forms.StatusStrip();
             this.statuslbl = new System.Windows.Forms.ToolStripStatusLabel();
+            this.fileblockbox = new System.Windows.Forms.NumericUpDown();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.filesectorbox = new System.Windows.Forms.NumericUpDown();
             this.groupBox2.SuspendLayout();
             this.logmenu.SuspendLayout();
             this.optionsbox.SuspendLayout();
@@ -82,11 +86,13 @@
             this.devices.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.statusStrip2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.fileblockbox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.filesectorbox)).BeginInit();
             this.SuspendLayout();
             // 
             // readbtn
             // 
-            this.readbtn.Location = new System.Drawing.Point(17, 329);
+            this.readbtn.Location = new System.Drawing.Point(18, 360);
             this.readbtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.readbtn.Name = "readbtn";
             this.readbtn.Size = new System.Drawing.Size(194, 35);
@@ -102,11 +108,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.outputbox);
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox2.Location = new System.Drawing.Point(18, 463);
+            this.groupBox2.Location = new System.Drawing.Point(18, 494);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox2.Size = new System.Drawing.Size(634, 545);
+            this.groupBox2.Size = new System.Drawing.Size(634, 514);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "output";
@@ -124,7 +130,7 @@
             this.outputbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.outputbox.Name = "outputbox";
             this.outputbox.ReadOnly = true;
-            this.outputbox.Size = new System.Drawing.Size(626, 516);
+            this.outputbox.Size = new System.Drawing.Size(626, 485);
             this.outputbox.TabIndex = 3;
             this.outputbox.Text = "";
             this.outputbox.WordWrap = false;
@@ -155,7 +161,7 @@
             // 
             // progress
             // 
-            this.progress.Location = new System.Drawing.Point(17, 418);
+            this.progress.Location = new System.Drawing.Point(18, 449);
             this.progress.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.progress.Name = "progress";
             this.progress.Size = new System.Drawing.Size(634, 35);
@@ -163,7 +169,7 @@
             // 
             // erasebtn
             // 
-            this.erasebtn.Location = new System.Drawing.Point(422, 329);
+            this.erasebtn.Location = new System.Drawing.Point(423, 360);
             this.erasebtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.erasebtn.Name = "erasebtn";
             this.erasebtn.Size = new System.Drawing.Size(230, 35);
@@ -174,9 +180,13 @@
             // 
             // optionsbox
             // 
+            this.optionsbox.Controls.Add(this.filesectorbox);
+            this.optionsbox.Controls.Add(this.label8);
             this.optionsbox.Controls.Add(this.zeroFillBadBlocks);
             this.optionsbox.Controls.Add(this.nandMMCStyle);
+            this.optionsbox.Controls.Add(this.label7);
             this.optionsbox.Controls.Add(this.label3);
+            this.optionsbox.Controls.Add(this.fileblockbox);
             this.optionsbox.Controls.Add(this.spiblockbox);
             this.optionsbox.Controls.Add(this.mmccountbox);
             this.optionsbox.Controls.Add(this.label6);
@@ -200,7 +210,7 @@
             this.optionsbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.optionsbox.Name = "optionsbox";
             this.optionsbox.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.optionsbox.Size = new System.Drawing.Size(634, 301);
+            this.optionsbox.Size = new System.Drawing.Size(634, 332);
             this.optionsbox.TabIndex = 3;
             this.optionsbox.TabStop = false;
             this.optionsbox.Text = "Options";
@@ -368,7 +378,7 @@
             this.devices.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.devices.Name = "devices";
             this.devices.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.devices.Size = new System.Drawing.Size(194, 111);
+            this.devices.Size = new System.Drawing.Size(194, 106);
             this.devices.TabIndex = 6;
             this.devices.TabStop = false;
             this.devices.Text = "Device";
@@ -502,7 +512,7 @@
             // 
             // writebtn
             // 
-            this.writebtn.Location = new System.Drawing.Point(219, 329);
+            this.writebtn.Location = new System.Drawing.Point(220, 360);
             this.writebtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.writebtn.Name = "writebtn";
             this.writebtn.Size = new System.Drawing.Size(194, 35);
@@ -519,7 +529,7 @@
             // abortbtn
             // 
             this.abortbtn.Enabled = false;
-            this.abortbtn.Location = new System.Drawing.Point(17, 373);
+            this.abortbtn.Location = new System.Drawing.Point(18, 404);
             this.abortbtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.abortbtn.Name = "abortbtn";
             this.abortbtn.Size = new System.Drawing.Size(396, 35);
@@ -559,7 +569,7 @@
             // 
             // xsvfbtn
             // 
-            this.xsvfbtn.Location = new System.Drawing.Point(422, 373);
+            this.xsvfbtn.Location = new System.Drawing.Point(423, 404);
             this.xsvfbtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.xsvfbtn.Name = "xsvfbtn";
             this.xsvfbtn.Size = new System.Drawing.Size(230, 35);
@@ -586,6 +596,55 @@
             this.statuslbl.Name = "statuslbl";
             this.statuslbl.Size = new System.Drawing.Size(81, 25);
             this.statuslbl.Text = "Progress";
+            // 
+            // fileblockbox
+            // 
+            this.fileblockbox.Hexadecimal = true;
+            this.fileblockbox.Location = new System.Drawing.Point(129, 296);
+            this.fileblockbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.fileblockbox.Maximum = new decimal(new int[] {
+            32767,
+            0,
+            0,
+            0});
+            this.fileblockbox.Name = "fileblockbox";
+            this.fileblockbox.Size = new System.Drawing.Size(86, 26);
+            this.fileblockbox.TabIndex = 1;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(37, 298);
+            this.label7.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(81, 20);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "File Block:";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(233, 298);
+            this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(89, 20);
+            this.label8.TabIndex = 13;
+            this.label8.Text = "File Sector:";
+            // 
+            // filesectorbox
+            // 
+            this.filesectorbox.Enabled = false;
+            this.filesectorbox.Hexadecimal = true;
+            this.filesectorbox.Location = new System.Drawing.Point(335, 296);
+            this.filesectorbox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.filesectorbox.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.filesectorbox.Name = "filesectorbox";
+            this.filesectorbox.Size = new System.Drawing.Size(291, 26);
+            this.filesectorbox.TabIndex = 14;
             // 
             // MainForm
             // 
@@ -621,6 +680,8 @@
             this.statusStrip1.PerformLayout();
             this.statusStrip2.ResumeLayout(false);
             this.statusStrip2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.fileblockbox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.filesectorbox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -670,6 +731,10 @@
         private System.Windows.Forms.CheckBox zeroFillBadBlocks;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox presetsBox;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.NumericUpDown fileblockbox;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.NumericUpDown filesectorbox;
     }
 }
 

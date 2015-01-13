@@ -2,6 +2,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Threading;
     using LibUsbDotNet;
     using LibUsbDotNet.Info;
@@ -699,6 +700,174 @@
                 Release();
             }
         }
+
+        /// <summary>
+        ///     Writes file to device using specified write mode (
+        ///     <paramref name="mode" />
+        ///     ) starting at
+        ///     <paramref name="startBlock" />
+        ///     and writing untill the end of the file or
+        ///     <paramref name="blockCount" />
+        /// </summary>
+        /// <param name="startBlock"> Starting blockID </param>
+        /// <param name="blockCount"> Block count (Small blocks!) if set to 0 full device/file write will be done </param>
+        /// <param name="filestartblock"> Starting blockID for the file </param>
+        /// <param name="file"> File to write </param>
+        /// <param name="mode"> Write Mode to use (Default = None/RAW [Write data as is]) </param>
+        /// <param name="verboseLevel">
+        ///     Specifies if you want alot of information on write errors or just a write error (default =
+        ///     only print write error without details)
+        /// </param>
+        public void Write(uint startBlock, uint blockCount, uint filestartblock, string file, SPIWriteModes mode = SPIWriteModes.None, int verboseLevel = 0)
+        {
+            CheckDeviceState();
+            PrintARMVersion();
+            AbortRequested = false;
+            XConfig xConfig;
+            Init(out xConfig);
+            PrintXConfig(xConfig, verboseLevel);
+            var addSpare = (mode & SPIWriteModes.AddSpare) == SPIWriteModes.AddSpare;
+            var correctSpare = (mode & SPIWriteModes.CorrectSpare) == SPIWriteModes.CorrectSpare;
+            var eraseFirst = (mode & SPIWriteModes.EraseFirst) == SPIWriteModes.EraseFirst;
+            var verify = (mode & SPIWriteModes.VerifyAfter) == SPIWriteModes.VerifyAfter;
+            var dataList = new List<byte>();
+            using (var br = OpenReader(file))
+            {
+                if (br == null)
+                    throw new OperationCanceledException(string.Format("Unable to open {0} for reading... Aborted by user!", file));
+
+                if (br.BaseStream.Length < (filestartblock * 0x4200) + (blockCount * 0x4200))
+                    throw new ArgumentOutOfRangeException("filestartblock");
+                br.BaseStream.Seek(filestartblock * 0x4200, SeekOrigin.Begin); // Seek to the block start
+
+                #region Preperations
+
+                var datablocks = (xConfig.GetFileBlockCount(file) - filestartblock);
+                if(datablocks < blockCount || blockCount == 0)
+                    blockCount = datablocks;
+                var lastBlock = startBlock + blockCount - 1;
+                var totalBlocks = lastBlock;
+                if (eraseFirst)
+                    totalBlocks += lastBlock;
+                if (verify)
+                    totalBlocks += lastBlock;
+
+                UpdateStatus("Starting write with the following settings:");
+                UpdateStatus(string.Format("Erase before writing: {0}", eraseFirst ? "Enabled" : "Disabled"));
+                UpdateStatus(string.Format("Verify after writing: {0}", verify ? "Enabled" : "Disabled"));
+                UpdateStatus(string.Format("Write Mode: {0}", addSpare ? "Add Spare" : correctSpare ? "Correct Spare" : "RAW"));
+                UpdateStatus(string.Format("Starting block: 0x{0:X} Starting Block (file): 0x{2:X} Last Block: 0x{1:X}", startBlock, lastBlock, filestartblock));
+                UpdateStatus(string.Format("Source file: {0}", file));
+
+                #endregion Preperations
+
+                Stopwatch sw;
+
+                #region Erase First
+
+                if (eraseFirst)
+                {
+                    sw = Stopwatch.StartNew();
+                    UpdateStatus(string.Format("Erasing blocks 0x{0:X} -> 0x{1:X}", startBlock, lastBlock));
+                    for (var block = startBlock; block <= lastBlock; block++)
+                    {
+                        if (AbortRequested)
+                        {
+                            sw.Stop();
+                            UpdateStatus(string.Format("Erase aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                            break;
+                        }
+                        UpdateProgress(block, lastBlock, 0, totalBlocks);
+                        EraseBlock(block, verboseLevel);
+                    }
+                    if (!AbortRequested)
+                    {
+                        sw.Stop();
+                        UpdateStatus(string.Format("Erase Completed after {0:F0} Minutes and {1:F0} Seconds!{2}Device will be reset before writing...", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds,
+                                                   Environment.NewLine));
+                        Reset();
+                    }
+                }
+
+                #endregion Erase First
+
+                #region Write
+
+                if (!AbortRequested)
+                {
+                    sw = Stopwatch.StartNew();
+                    UpdateStatus(string.Format("Writing blocks 0x{0:X} -> 0x{1:X}", startBlock, lastBlock));
+                    for (var block = startBlock; block <= lastBlock; block++)
+                    {
+                        if (AbortRequested)
+                        {
+                            sw.Stop();
+                            UpdateStatus(string.Format("Write aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                            break;
+                        }
+                        UpdateProgress(block, lastBlock, block + (eraseFirst ? lastBlock : 0), totalBlocks);
+                        var tmp = br.ReadBytes(addSpare ? 0x4000 : 0x4200);
+                        if (addSpare)
+                            tmp = AddSpareBlock(ref tmp, block, xConfig.MetaType);
+                        else if (correctSpare)
+                            CorrectSpareBlock(ref tmp, block, xConfig.MetaType);
+                        TestMetaUtils(ref tmp, xConfig.MetaType);
+                        WriteBlock(block, tmp, verboseLevel);
+                        if (verify)
+                            dataList.AddRange(tmp);
+                    }
+                    if (!AbortRequested)
+                    {
+                        sw.Stop();
+                        UpdateStatus(string.Format("Write Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                        if (!verify)
+                            UpdateProgress(lastBlock, lastBlock);
+                        else
+                            UpdateStatus("{0}Device will be reset before verifying...", Environment.NewLine);
+                    }
+                }
+
+                #endregion Write
+
+                #region Verify
+
+                if (!AbortRequested && verify)
+                {
+                    Reset();
+                    sw = Stopwatch.StartNew();
+                    UpdateStatus(string.Format("Verifying blocks 0x{0:X} -> 0x{1:X}", startBlock, lastBlock));
+                    var offset = 0;
+                    var writtenData = dataList.ToArray();
+                    dataList.Clear();
+                    for (var block = startBlock; block <= lastBlock; block++)
+                    {
+                        if (AbortRequested)
+                        {
+                            sw.Stop();
+                            UpdateStatus(string.Format("Verify aborted after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                            break;
+                        }
+                        UpdateProgress(block, lastBlock, block + totalBlocks - lastBlock, totalBlocks);
+                        var tmp = ReadBlock(block, false, verboseLevel);
+                        if (!CompareByteArrays(ref tmp, ref writtenData, offset))
+                            SendError(string.Format("Verification of block 0x{0:X} Failed!", block));
+                        offset += tmp.Length;
+                    }
+                    if (!AbortRequested)
+                    {
+                        UpdateProgress(lastBlock, lastBlock);
+                        sw.Stop();
+                        UpdateStatus(string.Format("Verify Completed after {0:F0} Minutes and {1:F0} Seconds!", sw.Elapsed.TotalMinutes, sw.Elapsed.Seconds));
+                    }
+                }
+
+                #endregion Verify
+
+                DeInit();
+                Release();
+            }
+        }
+
 
         /// <summary>
         ///     Reads

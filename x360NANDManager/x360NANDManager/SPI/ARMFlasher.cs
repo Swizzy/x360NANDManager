@@ -896,7 +896,7 @@
             if(err != ErrorCode.Success)
                 throw new X360NANDManagerException(X360NANDManagerException.ErrorLevels.USBError, err);
             var status = GetFlashStatus();
-            if (IsBadBlock(status, blockID, "Reading", verboseLevel >= 1) && !zeroFillBadBlocks)
+            if (!IsBadBlock(status, blockID, "Reading", verboseLevel >= 1) || !zeroFillBadBlocks)
                 return data;
             return new byte[data.Length];
         }
